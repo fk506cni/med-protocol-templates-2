@@ -134,14 +134,20 @@ class MemberProcessor:
         """研究実施体制セクションを置換"""
         org = self.members_data.get('research_organization', {})
 
-        # 研究責任者
+        # 研究責任者（分担研究者と同じ形式でフォーマット）
         pi = org.get('principal_investigator', {})
-        pi_text = self._format_member_info(pi, use_real_data, include_role=True)
+        pi_text = self._format_member_info(pi, use_real_data, include_role=True, use_co_investigator_format=True)
         content = self._replace_placeholder(content, 'RESEARCH_PI', pi_text)
 
         # 分担研究者
-        co_investigators = org.get('co_investigators', [])
-        co_inv_text = self._format_co_investigators(co_investigators, use_real_data)
+        # 新しい構造（co_investigators_by_role）を優先的にチェック
+        co_investigators_by_role = org.get('co_investigators_by_role', [])
+        if co_investigators_by_role:
+            co_inv_text = self._format_co_investigators_by_role(co_investigators_by_role, use_real_data)
+        else:
+            # 古い構造にフォールバック
+            co_investigators = org.get('co_investigators', [])
+            co_inv_text = self._format_co_investigators(co_investigators, use_real_data)
         content = self._replace_placeholder(content, 'RESEARCH_CO_INVESTIGATORS', co_inv_text)
 
         # データ管理責任者
@@ -237,29 +243,59 @@ class MemberProcessor:
 
         return content
 
-    def _format_member_info(self, member, use_real_data, include_role=True):
-        """メンバー情報をLaTeX形式でフォーマット"""
-        if use_real_data:
-            lines = [
-                f"氏名: {member.get('name', '')}",
-                f"所属: {member.get('affiliation', '')}",
-                f"職位: {member.get('position', '')}",
-            ]
-            if include_role and 'role' in member:
-                lines.append(f"役割: {member.get('role', '')}")
-        else:
-            lines = [
-                f"氏名: {self.MASK_VALUES['name']}",
-                f"所属: {self.MASK_VALUES['affiliation']}",
-                f"職位: {self.MASK_VALUES['position']}",
-            ]
-            if include_role:
-                lines.append(f"役割: {self.MASK_VALUES['role']}")
+    def _format_member_info(self, member, use_real_data, include_role=True, use_co_investigator_format=False):
+        """メンバー情報をLaTeX形式でフォーマット
 
-        return '\n'.join(lines)
+        Args:
+            member: メンバー情報の辞書
+            use_real_data: Trueの場合は実データ、Falseの場合はマスクデータを使用
+            include_role: 役割を含めるかどうか
+            use_co_investigator_format: Trueの場合は分担研究者と同じ（役割→所属→itemize）形式でフォーマット
+        """
+        if use_co_investigator_format:
+            if use_real_data:
+                role_text = member.get('role', '')
+                affiliation_text = member.get('affiliation', '')
+                member_line = f"  \\item {member.get('position', '')} {member.get('name', '')}"
+            else:
+                role_text = self.MASK_VALUES['role']
+                affiliation_text = self.MASK_VALUES['affiliation']
+                member_line = f"  \\item {self.MASK_VALUES['position']} {self.MASK_VALUES['name']}"
+
+            if include_role and role_text:
+                return f"""\\textbf{{{role_text}}}
+
+{affiliation_text}
+\\begin{{itemize}}
+{member_line}
+\\end{{itemize}}"""
+            else:
+                return f"""{affiliation_text}
+\\begin{{itemize}}
+{member_line}
+\\end{{itemize}}"""
+        else:
+            if use_real_data:
+                lines = [
+                    f"氏名: {member.get('name', '')}",
+                    f"所属: {member.get('affiliation', '')}",
+                    f"職位: {member.get('position', '')}",
+                ]
+                if include_role and 'role' in member:
+                    lines.append(f"役割: {member.get('role', '')}")
+            else:
+                lines = [
+                    f"氏名: {self.MASK_VALUES['name']}",
+                    f"所属: {self.MASK_VALUES['affiliation']}",
+                    f"職位: {self.MASK_VALUES['position']}",
+                ]
+                if include_role:
+                    lines.append(f"役割: {self.MASK_VALUES['role']}")
+
+            return '\n'.join(lines)
 
     def _format_co_investigators(self, co_investigators, use_real_data):
-        """分担研究者リストをフォーマット"""
+        """分担研究者リストをフォーマット（旧形式: フラットリスト）"""
         if not co_investigators:
             return "分担研究者: なし"
 
@@ -284,6 +320,47 @@ class MemberProcessor:
             sections.append(section)
 
         return '\n'.join(sections)
+
+    def _format_co_investigators_by_role(self, co_investigators_by_role, use_real_data):
+        """分担研究者を役割・所属ごとにグループ化してフォーマット（新形式）"""
+        if not co_investigators_by_role:
+            return "分担研究者: なし"
+
+        sections = []
+        for role_group in co_investigators_by_role:
+            role_name = role_group.get('role_name', '')
+
+            if use_real_data:
+                role_section = f"\\textbf{{{role_name}}}\n\n"
+            else:
+                role_section = f"\\textbf{{{self.MASK_VALUES['role']}}}\n\n"
+
+            dept_sections = []
+            for department in role_group.get('departments', []):
+                dept_name = department.get('department', '')
+                members = department.get('members', [])
+
+                if use_real_data:
+                    dept_line = f"{dept_name}"
+                else:
+                    dept_line = f"{self.MASK_VALUES['affiliation']}"
+
+                member_lines = []
+                for member in members:
+                    if use_real_data:
+                        member_line = f"  \\item {member.get('position', '')} {member.get('name', '')}"
+                    else:
+                        member_line = f"  \\item {self.MASK_VALUES['position']} {self.MASK_VALUES['name']}"
+                    member_lines.append(member_line)
+
+                if member_lines:
+                    dept_section = f"{dept_line}\n\\begin{{itemize}}\n" + "\n".join(member_lines) + "\n\\end{itemize}\n"
+                    dept_sections.append(dept_section)
+
+            role_section += '\n\\vspace{{0.5em}}\n\n'.join(dept_sections)
+            sections.append(role_section)
+
+        return '\n\\vspace{{1em}}\n\n'.join(sections)
 
     def _format_office_info(self, office, use_real_data):
         """研究事務局情報をフォーマット"""

@@ -38,32 +38,38 @@ research_organization:
     position: "教授"
     role: "本研究の計画、実施および運営管理におけるすべての責任を持つ。"
 
-  # 分担研究者（複数可）
-  co_investigators:
-    - name: "分担 一郎"
-      affiliation: "○○大学大学院医学研究科 □□講座"
-      position: "准教授"
-      role: "データ解析に関する教授指導"
+  # 分担研究者（役割・所属ごとにグループ化）
+  # 旧形式（co_investigators のフラットリスト）もフォールバックとしてサポート
+  co_investigators_by_role:
+    - role_name: "データ解析に関する教授指導"
+      departments:
+        - department: "○○大学大学院医学研究科 □□講座"
+          members:
+            - name: "分担 一郎"
+              position: "准教授"
 
-    - name: "分担 二郎"
-      affiliation: "○○大学大学院医学研究科 ◇◇講座"
-      position: "講師"
-      role: "データ収集補助"
+    - role_name: "データ収集補助"
+      departments:
+        - department: "○○大学大学院医学研究科 ◇◇講座"
+          members:
+            - name: "分担 二郎"
+              position: "講師"
+            - name: "分担 三郎"
+              position: "助教"
 
-    - name: "分担 三郎"
-      affiliation: "○○大学大学院医学研究科 ◇◇講座"
-      position: "助教"
-      role: "データ収集補助"
+    - role_name: "統計解析、実験デザイン教授指導"
+      departments:
+        - department: "○○大学大学院情報学研究科 統計科学専攻"
+          members:
+            - name: "統計 花子"
+              position: "准教授"
 
-    - name: "統計 花子"
-      affiliation: "○○大学大学院情報学研究科 統計科学専攻"
-      position: "准教授"
-      role: "統計解析、実験デザイン教授指導"
-
-    - name: "協力 次郎"
-      affiliation: "△△大学医学部 ××研究所"
-      position: "客員研究員"
-      role: "データ解析支援"
+    - role_name: "データ解析支援"
+      departments:
+        - department: "△△大学医学部 ××研究所"
+          members:
+            - name: "協力 次郎"
+              position: "客員研究員"
 
   # 試料・情報の管理責任者
   data_manager:
