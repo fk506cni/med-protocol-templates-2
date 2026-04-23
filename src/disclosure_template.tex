@@ -1,0 +1,155 @@
+\documentclass[a4paper,11pt,lualatex,ja=standard]{bxjsarticle}
+\usepackage[top=25mm,bottom=25mm,left=25mm,right=25mm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+
+% 研究の基本情報を読み込み（protocol_template.texと共通）
+\input{research_info.tex}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{情報公開文書}}
+\end{center}
+
+\vspace{2em}
+
+\noindent
+「人を対象とする生命科学・医学系研究に関する倫理指針」（令和3年6月）にしたがい、\InstitutionName\ \DepartmentName にて行っている疫学研究の情報を公開しています。
+
+\vspace{1em}
+
+\noindent
+疫学研究とは、人の病気の原因・病態の解明および予防、治療の方法の確立を目的とする研究です。当科では、過去の診療記録より得られた情報を利用して、下記の疫学研究を行っています。下記の疫学研究は、京都大学大学院医学研究科・医学部及び医学部附属病院医の倫理委員会の審査を受け、研究機関の長の許可を得て実施するものです。
+
+\vspace{2em}
+
+\section*{1. 研究の名称}
+
+\ResearchTitle
+
+\section*{2. 研究機関の名称・研究責任者の氏名}
+
+\InstitutionName\ \DepartmentName\ %%% PLACEHOLDER:PI_POSITION %%%\ %%% PLACEHOLDER:PI_NAME %%%
+
+\section*{3. 研究の目的}
+
+本研究の目的は、...（研究の背景と目的を記載）
+
+\vspace{1em}
+
+\noindent
+【記載例】
+
+\noindent
+本邦では少子高齢化による生産人口の減少と、医療介護の主要な受益者である高齢者の増加が急速に進行しており、医療ビッグデータを活用した医療DXに注目と期待が集まっています。しかしながらデータ活用を目指した結果、医療現場に求められる情報入力負荷は大きく増大し、本来の臨床業務を圧迫しつつあります。
+
+\noindent
+本研究では、医療者の筋肉を鍛えることで、情報入力による相対的負担を軽減し、現行の診療ワークフローを大きく変えることなく、包括的な診療内容の人力入力とAI開発を可能にすることで、医療者の筋肉を激増するとともに、より安全な医療の実現をめざしています。
+
+\section*{4. 対象となる情報の取得期間}
+
+\DataAcquisitionStart から\DataAcquisitionEnd までに、\InstitutionName で入院あるいは外来治療を行い、データが存在する全患者さんを対象としています。
+
+\section*{5. 研究実施期間}
+
+\StudyStart から\StudyEnd まで
+
+\section*{6. 試料・情報の利用目的、利用方法}
+
+対象となる患者さんの診療情報をデータベース、診療録より取得し、...（具体的な利用方法を記載）
+
+\vspace{1em}
+
+\noindent
+【記載例】
+
+\noindent
+対象となる患者さんの診療情報をデータベース、診療録より取得し、診療行為を補助する機械学習アーキテクチャを探索します。
+
+\section*{7. 利用または提供する試料・情報の項目}
+
+\begin{itemize}
+\item 患者基本項目
+\item 診療行為に関する情報（検体検査、処方、処置等）
+\item 医療者による記載情報
+\item その他、研究に必要な情報
+\end{itemize}
+
+\vspace{1em}
+
+\noindent
+【記載例】
+
+\begin{itemize}
+\item 患者基本項目
+\item 検体検査、注射、処方、処置、バイタル測定等、各種診療行為のオーダー/結果
+\item 医療者による自由記載/テンプレート入力
+\item 医事会計システムにおける実施医療情報
+\item 院内がん登録におけるがん情報
+\end{itemize}
+
+\section*{8. 利用または提供を開始する予定日}
+
+\StudyStart から
+
+\section*{9. 試料・情報の管理について責任を有する者}
+
+\InstitutionName\ %%% PLACEHOLDER:DATA_MANAGER_AFFILIATION %%%\ %%% PLACEHOLDER:DATA_MANAGER_POSITION %%%\ %%% PLACEHOLDER:DATA_MANAGER_NAME %%%
+
+\section*{10. 研究対象者の個人情報保護及び研究に係る試料・情報の保管}
+
+本研究で収集する情報は個人が特定できないようにID化した上で解析などを進めます。また本研究の成果を学会や学術誌で発表することがありますが、これも個人を特定できないようにした上で行います。収集したデータは個人情報の漏えいや紛失が起こらないように適切に保管し、研究終了後から10年間保管します。その後は個人情報に配慮し、適切に廃棄します。
+
+\section*{11. 参加拒否について}
+
+研究対象者等またはその関係者の申し出により、研究対象者が識別できる試料や情報の利用を停止することができます。
+
+\section*{12. 本研究に関する資料の入手、閲覧及びその方法}
+
+希望により個人情報保護及び本研究に支障のない範囲で本研究の研究実施計画書、研究の方法に関する資料の入手、閲覧が可能です。その際は下記研究対象者からの相談窓口へご連絡ください。
+
+\section*{13. 研究資金・利益相反}
+
+\noindent
+【記載例1：運営費交付金の場合】
+
+\noindent
+本研究は運営費交付金により行い、特定の企業等からの資金提供はありません。利益相反については「京都大学利益相反ポリシー」、「京都大学利益相反マネジメント規程」に従い、「京都大学臨床研究利益相反審査委員会」において適切に審査されます。
+
+\vspace{1em}
+
+\noindent
+【記載例2：公的研究費の場合】
+
+\noindent
+本研究は○○省科学研究費（○○○○）により行い、特定の企業等からの資金提供はありません。利益相反については「京都大学利益相反ポリシー」、「京都大学利益相反マネジメント規程」に従い、「京都大学臨床研究利益相反審査委員会」において適切に審査されます。
+
+\section*{14. 本研究に関する相談、お問い合わせ先}
+
+\subsection*{研究課題ごとの相談窓口}
+
+\begin{itemize}
+\item \InstitutionName\ %%% PLACEHOLDER:CONSULTATION_AFFILIATION %%%
+\item %%% PLACEHOLDER:CONSULTATION_POSITION %%%\ %%% PLACEHOLDER:CONSULTATION_CONTACT_PERSON %%%
+\item 〒XXX-XXXX 住所
+\item E-mail: %%% PLACEHOLDER:CONSULTATION_EMAIL %%%
+\item TEL: %%% PLACEHOLDER:CONSULTATION_TEL %%%
+\end{itemize}
+
+\subsection*{京都大学医学部附属病院 臨床研究相談窓口}
+
+\begin{itemize}
+\item E-mail: ctsodan@kuhp.kyoto-u.ac.jp
+\item TEL: 075-751-4748
+\end{itemize}
+
+\vspace{3em}
+
+\begin{flushright}
+\ProtocolDate\ Ver. 1
+\end{flushright}
+
+\end{document}

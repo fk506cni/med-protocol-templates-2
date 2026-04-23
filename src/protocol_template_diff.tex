@@ -1,0 +1,548 @@
+\documentclass{kyodai-protocol}
+
+%DIF 3a3-4
+ %DIF > 
+ %DIF > 
+%DIF -------
+% メタデータ
+\title{研究タイトルをここに記入}
+\protocolversion{第1.0版}
+\protocoldate{令和XX年XX月XX日}
+
+% 研究代表者情報
+\piname{研究代表者名}
+\piaffiliation{所属機関名・部署名・職位}
+\piaddress{〒000-0000 住所}
+\pitel{000-000-0000}
+\pifax{000-000-0000}
+\piemail{email@example.com}
+
+% 研究事務局情報
+\adminname{事務局担当者名}
+\adminaffiliation{所属機関名・部署名・職位}
+\adminaddress{〒000-0000 住所}
+\admintel{000-000-0000}
+\adminfax{000-000-0000}
+\adminemail{admin@example.com}
+%DIF PREAMBLE EXTENSION ADDED BY LATEXDIFF
+%DIF UNDERLINE PREAMBLE %DIF PREAMBLE
+\RequirePackage[normalem]{ulem} %DIF PREAMBLE
+\RequirePackage{color}\definecolor{RED}{rgb}{1,0,0}\definecolor{BLUE}{rgb}{0,0,1} %DIF PREAMBLE
+\providecommand{\DIFadd}[1]{{\protect\color{blue}\uwave{#1}}} %DIF PREAMBLE
+\providecommand{\DIFdel}[1]{{\protect\color{red}\sout{#1}}}                      %DIF PREAMBLE
+%DIF SAFE PREAMBLE %DIF PREAMBLE
+\providecommand{\DIFaddbegin}{} %DIF PREAMBLE
+\providecommand{\DIFaddend}{} %DIF PREAMBLE
+\providecommand{\DIFdelbegin}{} %DIF PREAMBLE
+\providecommand{\DIFdelend}{} %DIF PREAMBLE
+\providecommand{\DIFmodbegin}{} %DIF PREAMBLE
+\providecommand{\DIFmodend}{} %DIF PREAMBLE
+%DIF FLOATSAFE PREAMBLE %DIF PREAMBLE
+\providecommand{\DIFaddFL}[1]{\DIFadd{#1}} %DIF PREAMBLE
+\providecommand{\DIFdelFL}[1]{\DIFdel{#1}} %DIF PREAMBLE
+\providecommand{\DIFaddbeginFL}{} %DIF PREAMBLE
+\providecommand{\DIFaddendFL}{} %DIF PREAMBLE
+\providecommand{\DIFdelbeginFL}{} %DIF PREAMBLE
+\providecommand{\DIFdelendFL}{} %DIF PREAMBLE
+%DIF COLORLISTINGS PREAMBLE %DIF PREAMBLE
+\RequirePackage{listings} %DIF PREAMBLE
+\RequirePackage{color} %DIF PREAMBLE
+\lstdefinelanguage{DIFcode}{ %DIF PREAMBLE
+%DIF DIFCODE_UNDERLINE %DIF PREAMBLE
+  moredelim=[il][\color{red}\sout]{\%DIF\ <\ }, %DIF PREAMBLE
+  moredelim=[il][\color{blue}\uwave]{\%DIF\ >\ } %DIF PREAMBLE
+} %DIF PREAMBLE
+\lstdefinestyle{DIFverbatimstyle}{ %DIF PREAMBLE
+	language=DIFcode, %DIF PREAMBLE
+	basicstyle=\ttfamily, %DIF PREAMBLE
+	columns=fullflexible, %DIF PREAMBLE
+	keepspaces=true %DIF PREAMBLE
+} %DIF PREAMBLE
+\lstnewenvironment{DIFverbatim}{\lstset{style=DIFverbatimstyle}}{} %DIF PREAMBLE
+\lstnewenvironment{DIFverbatim*}{\lstset{style=DIFverbatimstyle,showspaces=true}}{} %DIF PREAMBLE
+%DIF END PREAMBLE EXTENSION ADDED BY LATEXDIFF
+
+\begin{document}
+
+\maketitle
+
+% 改訂履歴（機密情報ボックスは自動的に改訂履歴の後に表示されます）
+\begin{revisionhistory}
+第1.0版 & 令和XX年XX月XX日 \\ \hline
+ & \\ \hline
+\end{revisionhistory}
+
+\tableofcontents
+\DIFaddbegin \newpage
+\DIFaddend 
+
+\section{研究の名称}
+\label{sec:title}
+
+ここに研究の正式名称を記載する。
+
+\section{研究の背景}
+\label{sec:background}
+
+今まで何がわかっていて、何がわかっていないのか、研究の背景を述べる\DIFdelbegin \DIFdel{。適切な}\DIFdelend \DIFaddbegin \DIFadd{。
+}
+
+\textbf{\DIFadd{文献引用の記載方法:}}
+\DIFaddend 文献\DIFdelbegin \DIFdel{を引用する。文献の引用}\DIFdelend はref.bib\DIFaddbegin \DIFadd{ファイル}\DIFaddend に\DIFdelbegin \DIFdel{bibtex}\DIFdelend \DIFaddbegin \DIFadd{BibTeX}\DIFaddend 形式で\DIFdelbegin \DIFdel{書く。
+}%DIFDELCMD < 
+
+%DIFDELCMD < \begin{itemize}
+%DIFDELCMD < \item %%%
+\DIFdel{文献引用箇所に文献番号}\DIFdelend \DIFaddbegin \DIFadd{記載し、本文中で}{\color{blue}%DIFAUXCMD
+\verb|\cite{キー名}|%
+}%DIFAUXCMD
+\DIFadd{コマンドで引用する。例: 我々は何}\DIFaddend を\DIFdelbegin \DIFdel{表記
+}%DIFDELCMD < \item %%%
+\DIFdel{計画書末尾に「参考文献」}\DIFdelend \DIFaddbegin \DIFadd{知っていると言っていのか。知っていると思ったその内容は、無知}\DIFaddend の\DIFdelbegin \DIFdel{項目を立て、引用順に列挙
+}%DIFDELCMD < \end{itemize}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \DIFadd{谷で都合よく形成されたファンタジーではないと、何によって保証されるのか。\cite{ackerman20025what}
+}\DIFaddend 
+
+\section{研究の目的および意義}
+\label{sec:objectives}
+
+何を明らかにしようとするのか(リサーチクエスチョンは何か)。検証的研究の場合、証明しようとする仮説を示す。社会的および学術的な意義は何か。
+\DIFaddbegin \DIFadd{例：挨拶は大事。古事記にも書いてある。
+}\DIFaddend 
+
+\textbf{注意:} 原則、1つの研究計画書につき、1つの目的のみ。複数の個別の目的があれば分けて計画書を作成。
+
+\section{研究対象者の選定方針}
+\label{sec:subjects}
+
+\subsection{セッティング}
+研究対象者の選定、データ取得を行う施設・場所、どのような機会か
+
+\subsection{適格基準}
+
+\subsection{選択基準}
+\begin{itemize}
+\item 選択基準1
+\item 選択基準2
+\end{itemize}
+
+設定根拠も記載すること。
+
+\subsection{除外基準}
+\begin{itemize}
+\item 除外基準1
+\item 除外基準2
+\end{itemize}
+
+設定根拠も記載すること。
+
+\subsection{予定研究対象者数およびその設定根拠}
+
+予定研究対象者数: XX名
+
+統計学的な根拠によらずに研究対象者数を設定する場合も、年間の症例数からの見込みや「今回のサンプルサイズで十分に研究の目的が達成できる」と考えられた根拠を記載すること。
+
+\section{研究の方法および研究の科学的合理性の根拠}
+\label{sec:methods}
+
+\subsection{デザイン}
+
+以下のいずれかを選択:
+\begin{itemize}
+\item 介入研究
+\item 観察研究
+\item 遺伝子解析研究
+\end{itemize}
+
+\subsection{介入研究の場合}
+以下のうち、該当する事項・種類を示す:
+\begin{itemize}
+\item 試験の相: 探索的研究/検証的研究(相が明確な場合には第I, II, III, IV相)
+\item 比較の方法: 前後比較/並行群間比較/クロスオーバー/無対照
+\item 対照の種類: プラセボ対照/実薬対照/用量漸増/無治療
+\item 介入の割付け方法: 割付なし/無作為化
+\item 非盲検/盲検化(盲検化の場合、単盲検/二重盲検/三重盲検)
+\item 評価者盲検化(介入内容の盲検化を行わない場合)
+\end{itemize}
+
+\subsection{観察研究の場合}
+以下のうち、A、Bからそれぞれ該当する事項・種類を示す。B1、B2はいずれかのみ選択。
+
+\textbf{[A: データ取得の向き]}
+\begin{itemize}
+\item 前向き(当該研究に用いるために研究対象者から直接取得する試料・情報を用いる)
+\item 後向き(研究計画作成までに既に存在する試料・情報を取得する/当該研究とは異なる目的で研究対象者から直接取得された試料・情報の利用を含む)
+\end{itemize}
+
+\textbf{[B1: 横断的研究の場合 → 関心のある要因(曝露)とアウトカムを一時点で観察する]}
+\begin{itemize}
+\item 症例報告/ケースシリーズ/生態学的研究/質問紙調査/時系列分析/記述疫学的研究
+\end{itemize}
+
+\textbf{[B2: 縦断的研究の場合 → 関心のある要因(曝露)とアウトカムの観察の間に時間的経過があり、群間の比較がある]}
+\begin{itemize}
+\item コホート研究/ケースコントロール研究/並行群間比較対照研究
+\end{itemize}
+
+\subsection{遺伝子解析研究の場合}
+\begin{itemize}
+\item 対象とする遺伝子名
+\item データ取得の向き(前向き/後向き)
+\end{itemize}
+
+\section{方法}
+
+\subsection{研究対象者登録/割付け/盲検化の方法(介入研究の場合)}
+\begin{itemize}
+\item 研究対象者選定から、同意取得、登録、介入方法の割付けまでの流れ
+\item 募集方法も記載すること。広告やポスターを使用される場合は添付
+\item 介入(診断・治療)の割付けおよび無作為化を行う場合には、割付け方法について概要のみを示す
+\item 盲検化を行う場合には、盲検化する対象範囲と期間を示す
+\end{itemize}
+
+\subsection{研究対象者の登録方法(観察研究の場合)}
+\begin{itemize}
+\item 募集方法も記載すること。広告やポスターを使用される場合は添付
+\item 既存試料・情報を用いる場合は取得の経緯と利用方法
+\end{itemize}
+
+\section{観察・検査・調査・報告項目とスケジュール}
+
+\subsection{測定項目、測定方法、測定者または測定機関}
+\begin{itemize}
+\item 本研究で利用する評価項目・測定項目等を全て記載する
+\item 画像解析は統計解析の項ではなく、本項に評価項目として記載する
+\item 登録前データを利用する場合は、どの項目か記載する
+\item 使用する調査票やアンケート用紙を添付すること
+\end{itemize}
+
+\subsection{研究対象者の測定スケジュール}
+図表を用いて詳細に示す。前向きに研究対象者を登録する場合に、研究対象者がICの取得から研究参加終了までに経験する内容を時系列に沿って記載すること。拘束時間等。
+
+画像挿入の例（実際の画像ファイルを配置してから使用してください）
+\begin{figure}[htbp]
+    \centering
+    \DIFdelbeginFL %DIFDELCMD < \includegraphics[width=0.9\textwidth]{figures/fig1.png}
+%DIFDELCMD <     %%%
+\DIFdelendFL \DIFaddbeginFL \includegraphics[width=0.9\textwidth]{figures/Fig2.jpg}
+    \DIFaddendFL \caption{実験の様子}
+    \label{fig:schedule}
+\end{figure}
+
+\DIFaddbegin \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/Fig3.jpg}
+    \caption{\DIFaddFL{外来の様子}}
+    \DIFaddFL{\label{fig:schedule}
+}\end{figure}
+
+
+\DIFaddend % 表を使った例
+\begin{table}[htbp]
+    \centering
+    \caption{測定スケジュール例}
+    \label{tab:schedule}
+    \begin{tabular}{|l|c|c|c|c|}
+    \hline
+    \textbf{項目} & \textbf{登録時} & \textbf{3ヶ月後} & \textbf{6ヶ月後} & \textbf{12ヶ月後} \\ \hline
+    同意取得 & ○ & & & \\ \hline
+    問診・診察 & ○ & ○ & ○ & ○ \\ \hline
+    血液検査 & ○ & & ○ & ○ \\ \hline
+    アンケート & ○ & ○ & ○ & ○ \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{解析の概要}
+
+\subsection{主要評価項目}
+主要評価項目を記載
+
+\subsection{副次的評価項目}
+副次的評価項目を記載
+
+\subsection{主な解析方法}
+どの評価項目に対してどの解析手法を使用するのかわかるように記載すること。
+
+研究に用いる試料をゲノム解析する等により個人識別符号に該当するゲノムデータを取得する場合は、その旨を併せて記載。
+
+\section{研究期間}
+\label{sec:period}
+
+\begin{enumerate}
+\item 研究対象者登録期間: 研究機関の長の実施許可日からXXXX年X月X日
+\item 研究対象者観察期間: 登録日からXXXX年X月X日
+\item 研究実施期間: 研究機関の長の実施許可日からXXXX年X月X日
+\end{enumerate}
+
+\textbf{注意:}
+\begin{itemize}
+\item 研究実施期間(総研究期間)には、1)2)終了後、データ解析期間を含む
+\item 研究開始日は、研究機関の長の実施許可日以降に設定
+\item 多機関共同研究の場合、1)3)については20XX年X月X日と具体的に設定することを奨励
+\end{itemize}
+
+\section{インフォームド・コンセント(IC)を受ける手順}
+\label{sec:ic}
+
+\subsection{新たに試料・情報を取得して研究を実施する場合}
+
+研究対象者のリスク・負担に応じて、以下の表を参照し、適切なIC手続きを選択する。
+
+\begin{itemize}
+\item 侵襲を伴う場合: 説明同意文書
+\item 侵襲を伴わず介入を行う場合: 説明同意文書 or 口頭IC+記録
+\item 侵襲を伴わず介入を行わない場合:
+  \begin{itemize}
+  \item 人体取得試料: 説明同意文書 or 口頭IC+記録
+  \item 人体取得試料以外で要配慮個人情報: 原則として説明同意文書 or 口頭IC+記録(適切な同意が困難な場合は情報公開文書+拒否の機会保障)
+  \item 要配慮個人情報以外: 説明同意文書 or 口頭IC+記録 or 情報公開文書+拒否の機会保障
+  \end{itemize}
+\end{itemize}
+
+\subsection{既存試料・情報を自機関利用または他機関へ提供、他機関から取得する場合}
+
+二次利用に対する包括的な同意を得ている場合でも、新たな研究課題での二次利用の際は、情報公開文書にて拒否の機会を担保する必要がある。
+
+\subsection{口頭でICを受ける場合}
+説明の方法・内容並びに受ける同意の内容を含むこと。
+
+京大病院ではDocuMakerで文書管理するため原則文書同意。
+
+\subsection{研究計画書を変更した際の再同意}
+改めてICを受ける際の規定を記載する(新たな侵襲が加わる、研究対象者に不利益が及ぶ場合等)。
+
+\section{個人情報等の取り扱い}
+\label{sec:privacy}
+
+\subsection{研究で取り扱う試料・情報等の個人情報等の種類}
+
+\begin{itemize}
+\item 個人情報: 個人を同定できる情報(氏名・診療情報等)
+\item 仮名加工情報: 個人情報保護法第41条1項、個人情報保護委員会規則第31条で定める要件を満たし、作成者が、仮名加工情報としての作成意図をもって作成したもの
+\item 匿名加工情報: 個人情報保護法第43条1項、個人情報保護委員会規則第34条による適切な加工を行い、特定の個人を識別することができないように個人情報を加工して得られる個人に関する情報
+\item 個人関連情報: 個人情報、仮名加工情報及び匿名加工情報のいずれにも該当しないもの
+\end{itemize}
+
+例: 氏名をID化した情報(個人情報)
+
+\section{上記の作成の時期と方法}
+
+個人情報のID化方法などを記載。
+
+\section{保有または利用する個人情報等の項目と安全管理措置および留意事項}
+
+安全管理措置(取り扱う個人情報等の性質とそれに伴うリスクに応じた措置)について、以下の点を含めて記載すること:
+\begin{itemize}
+\item HDDの保管場所を物理鍵で施錠する
+\item 物理的区画への不正アクセスの防止
+\item 外部からの不正アクセスを防止する
+\item 情報漏洩への対策
+\end{itemize}
+
+\subsection{研究組織全体の情報管理の責任を負う者}
+
+常勤の者を1名記載すること。
+
+\subsection{同意撤回後のデータの取り扱いについて}
+
+(1)自機関内での個人情報等の作成または加工前/後、(2)解析前/後、(3)公表前/後等、時期に応じた対応を記載。
+
+\section{研究対象者に生じる負担並びに予測されるリスクおよび利益・総合的評価・対策}
+\label{sec:risk-benefit}
+
+\subsection{負担・リスク}
+
+負担・リスクの定義は「人を対象とする生命科学・医学系研究に関する倫理指針」を参照のこと。例えば、検査費用の負担増や身体の拘束、来院回数、検査回数が増えるなど、その状態が対象者にとって不快な状態となりうることを記載する。
+
+\subsection{利益}
+
+研究参加により対象者が得る利益または集団にもたらす潜在的利益を示す。研究対象者に利益がない場合は、ないことを記載する。
+
+\subsection{負担・リスクと利益の総合的評価}
+
+総合的な評価を記載。
+
+\subsection{負担・リスクを最小化する対策}
+
+具体的な対策を記載。
+
+\section{試料・情報の保管および廃棄の方法}
+\label{sec:storage}
+
+\subsection{試料・情報等の保管期間}
+
+「京都大学における公正な研究活動の推進等に関する規程第7条第2項の研究データの保存、開示等について定める件」第6項参照のこと。
+
+「(略)当該論文等の発表後少なくとも10年とし、これを下回って定めてはならない。」
+
+\subsection{試料・情報等の保管方法}
+
+漏えい、混交、盗難、紛失等の防止対策を記載。
+
+\subsection{保管期間後に廃棄する場合はその処理の方法}
+
+廃棄方法を記載。
+
+\section{試料・情報の二次利用および他研究機関への提供の可能性}
+\label{sec:secondary-use}
+
+有の場合、同意を受ける時点で想定される内容。無の場合はその旨を記載すること。
+
+\textbf{有の場合の記載例:}
+
+本研究で収集した試料・情報は、同意を受ける時点では特定されない将来の研究のために用いる可能性がある。二次利用および他研究機関へ提供する際は、新たな研究計画について倫理審査委員会で承認された後に行う。また、ホームページ上で研究の目的を含む研究実施の情報を公開し、研究対象者が拒否できる機会を保障する。
+
+将来の研究について、研究対象者が確認できる方法を記載(例: ホームページのURL、電話番号等)
+
+\section{倫理審査委員会及び研究機関の長への報告内容および方法}
+\label{sec:reporting}
+
+\begin{itemize}
+\item 研究の科学的合理性を損なう事実もしくは情報、または損なうおそれのある情報を得た場合は、速やかに安全性情報を提出する
+\item 研究の倫理的妥当性や研究実施の適正性、研究結果の信頼性を損なう事実もしくは情報、または損なうおそれのある情報を得た場合は、速やかに不適合報告書を提出する
+\item 年次報告は介入研究および侵襲(軽微な侵襲を除く)を伴う観察研究においては毎年必要であるが、それ以外の研究においては1回/3年以上とする
+\item 中止・終了報告は適宜行う
+\item 侵襲(軽微を除く)を伴う介入研究においては、成果の学会発表や論文をPDFで電子申請システムに添付する。また、成果の最終の公表を報告する
+\end{itemize}
+
+\section{研究の資金・利益相反}
+\label{sec:funding-coi}
+
+\subsection{研究資金の種類および提供者}
+
+種類(競争的研究資金や企業からの資金提供等)と課題名も記載すること。
+
+\subsection{提供者と研究者との関係}
+
+資金提供者の研究の企画、運営、解析、論文執筆に関与の有無を記載。
+
+\subsection{利益相反}
+
+\textbf{記載例:}
+
+利益相反について、京都大学利益相反ポリシー、京都大学利益相反マネジメント規程に従い、京都大学臨床研究利益相反審査委員会において適切に審査している。
+
+\section{研究対象者等およびその関係者からの相談等への対応}
+\label{sec:consultation}
+
+\subsection{研究課題ごとの相談窓口}
+
+研究室・担当者・連絡方法を併記
+
+\subsection{京都大学の苦情等の相談窓口}
+
+\begin{enumerate}
+\item 研究対象者が京大病院の患者の場合、京大病院の教職員が行う研究の場合:
+  \begin{itemize}
+  \item 京都大学医学部附属病院 臨床研究相談窓口
+  \item Tel: 075-751-4748
+  \item E-mail: ctsodan@kuhp.kyoto-u.ac.jp
+  \end{itemize}
+
+\item 京大病院が関与しない医学研究科の研究の場合:
+  \begin{itemize}
+  \item 京都大学医学研究科 総務企画課 研究推進掛
+  \item Tel: 075-753-9301
+  \item E-mail: 060kensui@mail2.adm.kyoto-u.ac.jp
+  \end{itemize}
+
+\item 遺伝カウンセリングに関する窓口:
+  \begin{itemize}
+  \item 京都大学医学部附属病院 遺伝子診療部
+  \item Tel: 075-751-4350 (受付時間 平日 13:00〜16:30)
+  \end{itemize}
+\end{enumerate}
+
+\section{研究対象者等の経済的負担または謝礼}
+\label{sec:compensation}
+
+無の場合はその旨を記載すること。
+
+\subsection{研究参加への謝礼}
+
+具体的な金額、支払いの方法等を記載すること。
+
+\subsection{研究目的で行う検査・薬剤等の費用負担}
+
+費用負担について記載。
+
+\section{研究の実施体制}
+\label{sec:organization}
+
+各研究者の氏名、所属、職位、役割分担(研究の総括、企画立案、運営、解析、論文執筆など)を記載すること。
+
+\subsection{研究責任者}
+
+\begin{itemize}
+\item 氏名:
+\item 所属:
+\item 職位:
+\item 役割:
+\end{itemize}
+
+\subsection{分担研究者}
+
+\begin{itemize}
+\item 氏名:
+\item 所属:
+\item 職位:
+\item 役割:
+\end{itemize}
+
+\subsection{共同研究機関}
+
+施設名、施設責任者を記載すること。
+
+\subsection{試料・情報の管理について責任を有する者}
+
+氏名、所属、職位を記載。
+
+\section{研究実施計画書の変更、および改訂}
+\label{sec:amendments}
+
+\textbf{記載例:}
+
+研究実施計画書に変更及び改訂を要する場合は、再度、倫理審査委員会に変更申請を行い、承認を得るものとする。
+
+\section{遵守すべき倫理指針、倫理審査}
+\label{sec:ethics-compliance}
+
+\textbf{記載例:}
+
+本研究は「ヘルシンキ宣言」と「人を対象とする生命科学・医学系研究に関する倫理指針」に基づき実施する。
+
+本研究は、京都大学大学院医学研究科・医学部及び医学部附属病院 医の倫理委員会の審査を受け、研究機関の長の許可を得て実施する。
+
+\section{研究成果の帰属}
+\label{sec:ownership}
+
+\textbf{記載例:}
+
+本研究の成果は、京都大学に属するものとする。
+
+\section{参考文献}
+\label{sec:references}
+
+\DIFdelbegin %DIFDELCMD < \begin{enumerate}
+\begin{enumerate}%DIFAUXCMD
+%DIFDELCMD < \item %%%
+\item%DIFAUXCMD
+\DIFdel{文献1
+}%DIFDELCMD < \item %%%
+\item%DIFAUXCMD
+\DIFdel{文献2
+}%DIFDELCMD < \item %%%
+\item%DIFAUXCMD
+\DIFdel{文献3
+}
+\end{enumerate}%DIFAUXCMD
+%DIFDELCMD < \end{enumerate}
+%DIFDELCMD < %%%
+\DIFdelend \DIFaddbegin \vspace{-2em}  %DIF >  セクションタイトルと文献リストの間のスペースを調整
+\renewcommand{\refname}{}  %DIF >  BibTeXの自動タイトルを非表示
+\bibliographystyle{junsrt}
+\bibliography{ref}
+\DIFaddend 
+
+\end{document}

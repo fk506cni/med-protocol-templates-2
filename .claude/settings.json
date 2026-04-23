@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env*)",
+      "Read(**/secrets/**)",
+      "Read(**/*.pem)",
+      "Read(**/.ssh/**)",
+      "Read(private/members.yaml)",
+      "Read(output/*_without_mask.pdf)",
+      "Read(output/*_without_mask.tex)",
+      "Read(src/*_without_mask.tex)",
+      "Read(output/*_diff_without_mask.pdf)",
+      "Read(output/*_diff_without_mask.tex)",
+      "Read(src/*_diff_without_mask.tex)",
+      "Read(**/*.members.tmp)",
+      "Read(**/*.personal.tmp)"
+    ]
+  }
+}

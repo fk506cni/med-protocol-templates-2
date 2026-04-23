@@ -1,0 +1,103 @@
+# 研究メンバー情報管理ファイル（サンプル）
+# このファイルはエージェントから完全に隠蔽されます
+# 実際のファイルは private/members.yaml として作成してください
+
+# ===================================================================
+# タイトルページ情報
+# ===================================================================
+
+# 研究代表者（タイトルページ用）
+principal_investigator:
+  name: "研究 太郎"
+  affiliation: "○○大学医学部附属病院 △△診療科"
+  position: "教授"
+  address: "〒XXX-XXXX ○○県○○市○○町X-X-X"
+  tel: "0X-XXXX-XXXX"
+  fax: "0X-XXXX-XXXX"
+  email: "kenkyu.taro@example.ac.jp"
+
+# 研究事務局（タイトルページ用）
+administrator:
+  name: "事務 花子"
+  affiliation: "○○大学医学部附属病院 研究支援センター"
+  position: "特定助教"
+  address: "〒XXX-XXXX ○○県○○市○○町X-X-X"
+  tel: "0X-XXXX-XXXX"
+  fax: "0X-XXXX-XXXX"
+  email: "jimu.hanako@example.ac.jp"
+
+# ===================================================================
+# 研究実施体制セクション
+# ===================================================================
+
+research_organization:
+  # 研究責任者
+  principal_investigator:
+    name: "研究 太郎"
+    affiliation: "○○大学医学部附属病院 △△診療科"
+    position: "教授"
+    role: "本研究の計画、実施および運営管理におけるすべての責任を持つ。"
+
+  # 分担研究者（複数可）
+  co_investigators:
+    - name: "分担 一郎"
+      affiliation: "○○大学大学院医学研究科 □□講座"
+      position: "准教授"
+      role: "データ解析に関する教授指導"
+
+    - name: "分担 二郎"
+      affiliation: "○○大学大学院医学研究科 ◇◇講座"
+      position: "講師"
+      role: "データ収集補助"
+
+    - name: "分担 三郎"
+      affiliation: "○○大学大学院医学研究科 ◇◇講座"
+      position: "助教"
+      role: "データ収集補助"
+
+    - name: "統計 花子"
+      affiliation: "○○大学大学院情報学研究科 統計科学専攻"
+      position: "准教授"
+      role: "統計解析、実験デザイン教授指導"
+
+    - name: "協力 次郎"
+      affiliation: "△△大学医学部 ××研究所"
+      position: "客員研究員"
+      role: "データ解析支援"
+
+  # 試料・情報の管理責任者
+  data_manager:
+    name: "事務 花子"
+    affiliation: "○○大学医学部附属病院 研究支援センター"
+    position: "特定助教"
+
+  # 統計解析担当者
+  statistician:
+    name: "統計 花子"
+    affiliation: "○○大学大学院情報学研究科 統計科学専攻"
+    position: "准教授"
+
+  # データマネジメント担当者
+  data_management:
+    name: "事務 花子"
+    affiliation: "○○大学医学部附属病院 研究支援センター"
+    position: "特定助教"
+
+  # 研究事務局
+  research_office:
+    name: "事務 花子"
+    affiliation: "○○大学医学部附属病院 研究支援センター"
+    position: "特定助教"
+    address: "〒XXX-XXXX ○○県○○市○○町X-X-X"
+    tel: "0X-XXXX-XXXX"
+
+# ===================================================================
+# 相談窓口情報
+# ===================================================================
+
+consultation:
+  contact_person: "事務 花子"
+  affiliation: "○○大学医学部附属病院 研究支援センター"
+  position: "特定助教"
+  tel: "0X-XXXX-XXXX"
+  email: "jimu.hanako@example.ac.jp"

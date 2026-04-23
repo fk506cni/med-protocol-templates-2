@@ -1,0 +1,19 @@
+# Claude Code / エージェントが絶対に読み取ってはいけないファイル・ディレクトリ
+# このファイルはエージェントがファイルを読み取る際に参照されます
+
+# 個人情報を含む研究メンバー管理ディレクトリ
+private/
+
+# 個人情報を含むコンパイル済みファイル（_without_mask）
+output/*_without_mask.pdf
+output/*_without_mask.tex
+src/*_without_mask.tex
+
+# 個人情報を含む差分検証ファイル（_without_mask）
+output/*_diff_without_mask.pdf
+output/*_diff_without_mask.tex
+src/*_diff_without_mask.tex
+
+# 個人情報を含む可能性のある一時ファイル
+*.members.tmp
+*.personal.tmp

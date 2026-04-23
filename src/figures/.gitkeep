@@ -1,0 +1,31 @@
+# 画像ファイル用ディレクトリ
+
+このディレクトリに研究計画書で使用する画像ファイルを配置してください。
+
+## 対応形式
+
+- PDF (.pdf) - ベクター画像、推奨形式
+- PNG (.png) - ビットマップ画像
+- JPEG (.jpg, .jpeg) - 写真など
+- EPS (.eps) - ベクター画像
+
+## 使用例
+
+```latex
+% 基本的な画像挿入
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/研究デザイン図.pdf}
+    \caption{研究デザインの概要}
+    \label{fig:study-design}
+\end{figure}
+
+% 画像への参照
+図\ref{fig:study-design}に示すように...
+```
+
+## 注意事項
+
+- 画像ファイル名は日本語でも英語でも可
+- パスは `figures/ファイル名.拡張子` の形式で指定
+- 高解像度の画像を使用してください（印刷品質を考慮）

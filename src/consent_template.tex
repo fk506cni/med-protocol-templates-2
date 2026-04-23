@@ -1,0 +1,92 @@
+\documentclass[a4paper,11pt,lualatex,ja=standard]{bxjsarticle}
+\usepackage[top=20mm,bottom=20mm,left=25mm,right=25mm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+
+% 行間を詰める
+\setlength{\parskip}{0pt}
+\setlength{\baselineskip}{18pt}
+
+% 研究の基本情報を読み込み（protocol_template.texと共通）
+\input{research_info.tex}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{研究参加の同意書}}
+\end{center}
+
+\vspace{1em}
+
+\noindent
+【研究を行う機関の長：（\InstitutionHead）等】殿
+
+\vspace{0.5em}
+
+\noindent
+説明を受け、以下の項目を理解し、【\ResearchTitle】に参加することに同意します。
+
+\vspace{0.5em}
+
+\begin{enumerate}
+\setlength{\itemsep}{0.1em}
+\setlength{\parsep}{0pt}
+\item 研究実施について
+\item 研究機関
+\item 研究の目的および意義
+\item 研究方法と期間
+\item 研究対象者として選定された理由
+\item 研究対象者に生じる負担と、予想されるリスクおよび利益
+\item いつでも同意の撤回ができます
+\item 研究に同意しない、または同意撤回において不利益はないこと
+\item 研究に関する情報公開について
+\item 研究計画書等の閲覧について
+\item 個人情報の取扱いについて
+\item 試料・情報の保管および廃棄の方法
+\item 研究資金および利益相反について
+\item 研究より得られた結果の取り扱い
+\item 相談の窓口
+\item 経済的負担／謝礼について
+% 該当する場合のみ以下の項目を含めてください
+% \item （通常の診療を超える医療行為を伴う研究の場合）他の治療法について
+% \item （通常の診療を超える医療行為を伴う研究の場合）研究参加後の医療の提供について
+% \item （侵襲を伴う研究の場合）健康被害の補償について
+\item 試料・情報の将来の研究における使用および他機関への提供
+% \item （侵襲を伴う研究であって介入を行うものの場合）モニタリング・監査・倫理審査委員会による個人情報の閲覧
+\end{enumerate}
+
+% \vspace{0.5em}
+% {\small \textcolor{red}{\textbf{※省略した項目がある場合、項目の通し番号に注意してください。}}}
+
+\vspace{1.5em}
+
+\begin{tabular}{ll}
+日付 & （西暦）\hspace{3em}年\hspace{2em}月\hspace{2em}日 \\[1.5em]
+本人氏名（自筆） & \hspace{10cm} \\[2em]
+\end{tabular}
+
+\vspace{1em}
+
+\noindent
+（代諾者が必要であれば）
+
+\vspace{0.5em}
+
+\begin{tabular}{ll}
+代諾者 氏名（自筆） & \hspace{6cm} 本人との関係（\hspace{3cm}） \\[2em]
+\end{tabular}
+
+\vspace{1em}
+
+\begin{tabular}{ll}
+説明者 氏名（自筆） & \hspace{6cm} （所属）\hspace{3cm} \\[1.5em]
+\end{tabular}
+
+\vspace{1em}
+
+\noindent
+{\small \textbf{※同意書のコピーを一部必ずもらってください}}
+
+\end{document}

@@ -1,0 +1,68 @@
+# Docker container for SVG to PDF conversion using Inkscape + GhostScript with comprehensive fonts
+FROM alpine:latest
+
+# Install necessary packages including GhostScript
+RUN apk add --no-cache \
+    inkscape \
+    ghostscript \
+    fontconfig \
+    wget \
+    cabextract \
+    bash \
+    font-noto-cjk \
+    font-ipa
+
+# Create fonts directory for Microsoft Core Fonts
+RUN mkdir -p /usr/share/fonts/truetype/msttcorefonts
+
+# Download and install Microsoft Core Fonts (Arial, Times New Roman, Courier New, etc.)
+RUN cd /tmp && \
+    # Andale Mono
+    wget -q https://downloads.sourceforge.net/corefonts/andale32.exe && \
+    cabextract -q andale32.exe && \
+    # Arial
+    wget -q https://downloads.sourceforge.net/corefonts/arial32.exe && \
+    cabextract -q arial32.exe && \
+    # Arial Black
+    wget -q https://downloads.sourceforge.net/corefonts/arialb32.exe && \
+    cabextract -q arialb32.exe && \
+    # Comic Sans MS
+    wget -q https://downloads.sourceforge.net/corefonts/comic32.exe && \
+    cabextract -q comic32.exe && \
+    # Courier New
+    wget -q https://downloads.sourceforge.net/corefonts/courie32.exe && \
+    cabextract -q courie32.exe && \
+    # Georgia
+    wget -q https://downloads.sourceforge.net/corefonts/georgi32.exe && \
+    cabextract -q georgi32.exe && \
+    # Impact
+    wget -q https://downloads.sourceforge.net/corefonts/impact32.exe && \
+    cabextract -q impact32.exe && \
+    # Times New Roman
+    wget -q https://downloads.sourceforge.net/corefonts/times32.exe && \
+    cabextract -q times32.exe && \
+    # Trebuchet MS
+    wget -q https://downloads.sourceforge.net/corefonts/trebuc32.exe && \
+    cabextract -q trebuc32.exe && \
+    # Verdana
+    wget -q https://downloads.sourceforge.net/corefonts/verdan32.exe && \
+    cabextract -q verdan32.exe && \
+    # Webdings
+    wget -q https://downloads.sourceforge.net/corefonts/webdin32.exe && \
+    cabextract -q webdin32.exe && \
+    # Copy all fonts
+    cp *.ttf *.TTF /usr/share/fonts/truetype/msttcorefonts/ 2>/dev/null || true && \
+    fc-cache -f -v && \
+    rm -rf /tmp/*
+
+# Verify font installation
+RUN echo "=== Installed Microsoft Core Fonts ===" && \
+    fc-list | grep -i "arial\|times\|courier\|verdana\|georgia" && \
+    echo "=== Installed Japanese Fonts ===" && \
+    fc-list | grep -i "noto\|ipa"
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+CMD ["bash"]

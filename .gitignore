@@ -1,0 +1,86 @@
+
+# 個人情報管理ディレクトリ（研究メンバー情報等）
+private/*
+!private/.gitkeep
+private/members.yaml
+!private/members.yaml.example
+
+# Output files
+output/*.pdf
+output/*.docx
+
+# 個人情報を含むコンパイル済みファイル
+output/*_without_mask.pdf
+output/*_without_mask.tex
+src/*_without_mask.tex
+
+# マスク付きファイル（必要ならコメントアウトしても良い）
+output/*_with_mask.pdf
+output/*_with_mask.tex
+src/*_with_mask.tex
+
+# 個人情報を含む差分検証ファイル
+output/*_diff_without_mask.pdf
+output/*_diff_without_mask.tex
+src/*_diff_without_mask.tex
+
+# マスク付きファイル（必要ならコメントアウトしても良い）
+output/*_with_mask.pdf
+output/*_with_mask.tex
+src/*_with_mask.tex
+
+output/*_diff_with_mask.pdf
+output/*_diff_with_mask.tex
+src/*_diff_with_mask.tex
+
+# Keep the output directory but ignore contents
+!output/.gitkeep
+
+# Reference files (do not stage any files in ref/)
+ref/
+
+# LaTeX一時ファイル
+*.aux
+*.log
+*.toc
+*.out
+*.dvi
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.idx
+*.ind
+*.ilg
+*.lof
+*.lot
+
+# Docker volumes
+.docker/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+./temp/*
+./temp/
+_archives/*
+!_archives/.gitkeep
+
+# Custom output directory
+custom_output/
+
+# Temporary markdown files
+prompt.md
+message.md

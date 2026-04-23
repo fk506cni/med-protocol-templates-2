@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  latexdiff:
+    build: .
+    container_name: mpac-latexdiff
+    volumes:
+      - ../../:/workspace
+    working_dir: /workspace

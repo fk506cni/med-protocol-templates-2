@@ -1,0 +1,379 @@
+#!/usr/bin/env python3
+"""
+研究メンバー情報処理スクリプト
+
+このスクリプトは：
+1. private/members.yaml から研究メンバー情報を読み込む
+2. LaTeXテンプレート内のプレースホルダーを置換する
+3. 2つのバージョンのTeXファイルを生成：
+   - _with_mask.tex: メンバー情報がプレースホルダーで表示されたバージョン
+   - _without_mask.tex: 実際のメンバー情報が埋め込まれたバージョン（提出用）
+"""
+
+import os
+import sys
+import yaml
+import re
+from pathlib import Path
+
+
+class MemberProcessor:
+    """研究メンバー情報処理クラス"""
+
+    # マスク用のプレースホルダー
+    MASK_VALUES = {
+        'name': '研究メンバー（マスク済み）',
+        'affiliation': '所属機関名（マスク済み）',
+        'position': '職位（マスク済み）',
+        'address': '〒000-0000 住所（マスク済み）',
+        'tel': '000-000-0000',
+        'fax': '000-000-0000',
+        'email': 'masked@example.com',
+        'role': '役割の説明（マスク済み）',
+    }
+
+    def __init__(self, members_yaml_path, template_path):
+        """
+        Args:
+            members_yaml_path: メンバー情報YAMLファイルのパス
+            template_path: LaTeXテンプレートファイルのパス
+        """
+        self.members_yaml_path = Path(members_yaml_path)
+        self.template_path = Path(template_path)
+        self.members_data = None
+        self.template_content = None
+
+    def load_members(self):
+        """YAMLファイルからメンバー情報を読み込む"""
+        if not self.members_yaml_path.exists():
+            raise FileNotFoundError(
+                f"メンバー情報ファイルが見つかりません: {self.members_yaml_path}\n"
+                f"private/members.yaml.example を参考に private/members.yaml を作成してください。"
+            )
+
+        with open(self.members_yaml_path, 'r', encoding='utf-8') as f:
+            self.members_data = yaml.safe_load(f)
+
+        print(f"✓ メンバー情報を読み込みました: {self.members_yaml_path}")
+
+    def load_template(self):
+        """LaTeXテンプレートを読み込む"""
+        if not self.template_path.exists():
+            raise FileNotFoundError(f"テンプレートファイルが見つかりません: {self.template_path}")
+
+        with open(self.template_path, 'r', encoding='utf-8') as f:
+            self.template_content = f.read()
+
+        print(f"✓ テンプレートを読み込みました: {self.template_path}")
+
+    def replace_placeholders(self, content, use_real_data=True):
+        """
+        プレースホルダーを置換
+
+        Args:
+            content: 置換対象のコンテンツ
+            use_real_data: Trueの場合は実データ、Falseの場合はマスクデータを使用
+
+        Returns:
+            置換後のコンテンツ
+        """
+        result = content
+
+        # タイトルページの研究代表者情報
+        pi = self.members_data.get('principal_investigator', {})
+        result = self._replace_command(result, 'piname',
+                                       pi.get('name') if use_real_data else self.MASK_VALUES['name'])
+        result = self._replace_command(result, 'piaffiliation',
+                                       f"{pi.get('affiliation', '')}・{pi.get('position', '')}" if use_real_data
+                                       else f"{self.MASK_VALUES['affiliation']}・{self.MASK_VALUES['position']}")
+        result = self._replace_command(result, 'piaddress',
+                                       pi.get('address') if use_real_data else self.MASK_VALUES['address'])
+        result = self._replace_command(result, 'pitel',
+                                       pi.get('tel') if use_real_data else self.MASK_VALUES['tel'])
+        result = self._replace_command(result, 'pifax',
+                                       pi.get('fax') if use_real_data else self.MASK_VALUES['fax'])
+        result = self._replace_command(result, 'piemail',
+                                       pi.get('email') if use_real_data else self.MASK_VALUES['email'])
+
+        # タイトルページの研究事務局情報
+        admin = self.members_data.get('administrator', {})
+        result = self._replace_command(result, 'adminname',
+                                       admin.get('name') if use_real_data else self.MASK_VALUES['name'])
+        result = self._replace_command(result, 'adminaffiliation',
+                                       f"{admin.get('affiliation', '')}・{admin.get('position', '')}" if use_real_data
+                                       else f"{self.MASK_VALUES['affiliation']}・{self.MASK_VALUES['position']}")
+        result = self._replace_command(result, 'adminaddress',
+                                       admin.get('address') if use_real_data else self.MASK_VALUES['address'])
+        result = self._replace_command(result, 'admintel',
+                                       admin.get('tel') if use_real_data else self.MASK_VALUES['tel'])
+        result = self._replace_command(result, 'adminfax',
+                                       admin.get('fax') if use_real_data else self.MASK_VALUES['fax'])
+        result = self._replace_command(result, 'adminemail',
+                                       admin.get('email') if use_real_data else self.MASK_VALUES['email'])
+
+        # 研究実施体制セクション（プレースホルダーで置換）
+        result = self._replace_organization_section(result, use_real_data)
+
+        # 研究代表者・研究事務局の個別フィールド（説明文書・同意書・情報公開文書用）
+        result = self._replace_pi_admin_fields(result, use_real_data)
+
+        # 相談窓口情報
+        result = self._replace_consultation_section(result, use_real_data)
+
+        return result
+
+    def _replace_command(self, content, command, value):
+        """LaTeXコマンドを置換"""
+        pattern = rf'\\{command}\{{[^}}]*\}}'
+        replacement = f'\\{command}{{{value}}}'
+        # re.sub()で置換文字列のバックスラッシュをエスケープするため、
+        # 置換文字列を関数として渡す
+        return re.sub(pattern, lambda m: replacement, content)
+
+    def _replace_organization_section(self, content, use_real_data):
+        """研究実施体制セクションを置換"""
+        org = self.members_data.get('research_organization', {})
+
+        # 研究責任者
+        pi = org.get('principal_investigator', {})
+        pi_text = self._format_member_info(pi, use_real_data, include_role=True)
+        content = self._replace_placeholder(content, 'RESEARCH_PI', pi_text)
+
+        # 分担研究者
+        co_investigators = org.get('co_investigators', [])
+        co_inv_text = self._format_co_investigators(co_investigators, use_real_data)
+        content = self._replace_placeholder(content, 'RESEARCH_CO_INVESTIGATORS', co_inv_text)
+
+        # データ管理責任者
+        dm = org.get('data_manager', {})
+        dm_text = self._format_member_info(dm, use_real_data, include_role=False)
+        content = self._replace_placeholder(content, 'RESEARCH_DATA_MANAGER', dm_text)
+
+        # データ管理責任者（個別フィールド）
+        content = self._replace_placeholder(content, 'DATA_MANAGER_NAME',
+                                           dm.get('name') if use_real_data else self.MASK_VALUES['name'])
+        content = self._replace_placeholder(content, 'DATA_MANAGER_AFFILIATION',
+                                           dm.get('affiliation') if use_real_data else self.MASK_VALUES['affiliation'])
+        content = self._replace_placeholder(content, 'DATA_MANAGER_POSITION',
+                                           dm.get('position') if use_real_data else self.MASK_VALUES['position'])
+
+        # 統計解析担当者
+        stat = org.get('statistician', {})
+        stat_text = self._format_member_info(stat, use_real_data, include_role=False)
+        content = self._replace_placeholder(content, 'RESEARCH_STATISTICIAN', stat_text)
+
+        # データマネジメント担当者
+        data_mgmt = org.get('data_management', {})
+        data_mgmt_text = self._format_member_info(data_mgmt, use_real_data, include_role=False)
+        content = self._replace_placeholder(content, 'RESEARCH_DATA_MANAGEMENT', data_mgmt_text)
+
+        # 研究事務局
+        office = org.get('research_office', {})
+        office_text = self._format_office_info(office, use_real_data)
+        content = self._replace_placeholder(content, 'RESEARCH_OFFICE', office_text)
+
+        return content
+
+    def _replace_pi_admin_fields(self, content, use_real_data):
+        """タイトルページ用の研究代表者・研究事務局の個別フィールドを置換"""
+        # 研究代表者（個別フィールド）
+        pi = self.members_data.get('principal_investigator', {})
+        content = self._replace_placeholder(content, 'PI_NAME',
+                                           pi.get('name') if use_real_data else self.MASK_VALUES['name'])
+        content = self._replace_placeholder(content, 'PI_AFFILIATION',
+                                           pi.get('affiliation') if use_real_data else self.MASK_VALUES['affiliation'])
+        content = self._replace_placeholder(content, 'PI_POSITION',
+                                           pi.get('position') if use_real_data else self.MASK_VALUES['position'])
+        content = self._replace_placeholder(content, 'PI_ADDRESS',
+                                           pi.get('address') if use_real_data else self.MASK_VALUES['address'])
+        content = self._replace_placeholder(content, 'PI_TEL',
+                                           pi.get('tel') if use_real_data else self.MASK_VALUES['tel'])
+        content = self._replace_placeholder(content, 'PI_FAX',
+                                           pi.get('fax') if use_real_data else self.MASK_VALUES['fax'])
+        content = self._replace_placeholder(content, 'PI_EMAIL',
+                                           pi.get('email') if use_real_data else self.MASK_VALUES['email'])
+
+        # 研究事務局（個別フィールド）
+        admin = self.members_data.get('administrator', {})
+        content = self._replace_placeholder(content, 'ADMIN_NAME',
+                                           admin.get('name') if use_real_data else self.MASK_VALUES['name'])
+        content = self._replace_placeholder(content, 'ADMIN_AFFILIATION',
+                                           admin.get('affiliation') if use_real_data else self.MASK_VALUES['affiliation'])
+        content = self._replace_placeholder(content, 'ADMIN_POSITION',
+                                           admin.get('position') if use_real_data else self.MASK_VALUES['position'])
+        content = self._replace_placeholder(content, 'ADMIN_ADDRESS',
+                                           admin.get('address') if use_real_data else self.MASK_VALUES['address'])
+        content = self._replace_placeholder(content, 'ADMIN_TEL',
+                                           admin.get('tel') if use_real_data else self.MASK_VALUES['tel'])
+        content = self._replace_placeholder(content, 'ADMIN_FAX',
+                                           admin.get('fax') if use_real_data else self.MASK_VALUES['fax'])
+        content = self._replace_placeholder(content, 'ADMIN_EMAIL',
+                                           admin.get('email') if use_real_data else self.MASK_VALUES['email'])
+
+        return content
+
+    def _replace_consultation_section(self, content, use_real_data):
+        """相談窓口セクションを置換"""
+        consult = self.members_data.get('consultation', {})
+
+        if use_real_data:
+            consult_text = f"{consult.get('affiliation', '')} {consult.get('position', '')}\n{consult.get('contact_person', '')}\n電話： {consult.get('tel', '')}"
+        else:
+            consult_text = f"{self.MASK_VALUES['affiliation']} {self.MASK_VALUES['position']}\n{self.MASK_VALUES['name']}\n電話： {self.MASK_VALUES['tel']}"
+
+        content = self._replace_placeholder(content, 'CONSULTATION_CONTACT', consult_text)
+
+        # 相談窓口（個別フィールド）
+        content = self._replace_placeholder(content, 'CONSULTATION_CONTACT_PERSON',
+                                           consult.get('contact_person') if use_real_data else self.MASK_VALUES['name'])
+        content = self._replace_placeholder(content, 'CONSULTATION_AFFILIATION',
+                                           consult.get('affiliation') if use_real_data else self.MASK_VALUES['affiliation'])
+        content = self._replace_placeholder(content, 'CONSULTATION_POSITION',
+                                           consult.get('position') if use_real_data else self.MASK_VALUES['position'])
+        content = self._replace_placeholder(content, 'CONSULTATION_TEL',
+                                           consult.get('tel') if use_real_data else self.MASK_VALUES['tel'])
+        content = self._replace_placeholder(content, 'CONSULTATION_EMAIL',
+                                           consult.get('email', '') if use_real_data else self.MASK_VALUES['email'])
+
+        return content
+
+    def _format_member_info(self, member, use_real_data, include_role=True):
+        """メンバー情報をLaTeX形式でフォーマット"""
+        if use_real_data:
+            lines = [
+                f"氏名: {member.get('name', '')}",
+                f"所属: {member.get('affiliation', '')}",
+                f"職位: {member.get('position', '')}",
+            ]
+            if include_role and 'role' in member:
+                lines.append(f"役割: {member.get('role', '')}")
+        else:
+            lines = [
+                f"氏名: {self.MASK_VALUES['name']}",
+                f"所属: {self.MASK_VALUES['affiliation']}",
+                f"職位: {self.MASK_VALUES['position']}",
+            ]
+            if include_role:
+                lines.append(f"役割: {self.MASK_VALUES['role']}")
+
+        return '\n'.join(lines)
+
+    def _format_co_investigators(self, co_investigators, use_real_data):
+        """分担研究者リストをフォーマット"""
+        if not co_investigators:
+            return "分担研究者: なし"
+
+        sections = []
+        for i, member in enumerate(co_investigators, 1):
+            if use_real_data:
+                section = f"""\\textbf{{分担研究者{i}}}
+
+{member.get('role', '')}
+
+{member.get('affiliation', '')}
+{member.get('position', '')} {member.get('name', '')}
+"""
+            else:
+                section = f"""\\textbf{{分担研究者{i}}}
+
+{self.MASK_VALUES['role']}
+
+{self.MASK_VALUES['affiliation']}
+{self.MASK_VALUES['position']} {self.MASK_VALUES['name']}
+"""
+            sections.append(section)
+
+        return '\n'.join(sections)
+
+    def _format_office_info(self, office, use_real_data):
+        """研究事務局情報をフォーマット"""
+        if use_real_data:
+            return f"""{office.get('affiliation', '')}
+{office.get('position', '')} {office.get('name', '')}
+
+{office.get('address', '')}
+電話： {office.get('tel', '')}"""
+        else:
+            return f"""{self.MASK_VALUES['affiliation']}
+{self.MASK_VALUES['position']} {self.MASK_VALUES['name']}
+
+{self.MASK_VALUES['address']}
+電話： {self.MASK_VALUES['tel']}"""
+
+    def _replace_placeholder(self, content, placeholder, value):
+        """プレースホルダーを置換"""
+        pattern = f'%%% PLACEHOLDER:{placeholder} %%%'
+        return content.replace(pattern, value)
+
+    def generate_files(self):
+        """マスク版と実データ版の2つのファイルを生成"""
+        # ベース名を取得
+        base_name = self.template_path.stem
+        output_dir = self.template_path.parent
+
+        # マスク版
+        masked_content = self.replace_placeholders(self.template_content, use_real_data=False)
+        masked_path = output_dir / f"{base_name}_with_mask.tex"
+        with open(masked_path, 'w', encoding='utf-8') as f:
+            f.write(masked_content)
+        print(f"✓ マスク版を生成しました: {masked_path}")
+
+        # 実データ版
+        real_content = self.replace_placeholders(self.template_content, use_real_data=True)
+        real_path = output_dir / f"{base_name}_without_mask.tex"
+        with open(real_path, 'w', encoding='utf-8') as f:
+            f.write(real_content)
+        print(f"✓ 実データ版を生成しました: {real_path}")
+
+        return masked_path, real_path
+
+
+def main():
+    """メイン処理"""
+    # スクリプトのディレクトリからプロジェクトルートを取得
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+
+    # デフォルトパス
+    members_yaml = project_root / 'private' / 'members.yaml'
+    template_file = project_root / 'src' / 'protocol_template.tex'
+
+    # コマンドライン引数があれば上書き
+    if len(sys.argv) > 1:
+        template_file = Path(sys.argv[1])
+    if len(sys.argv) > 2:
+        members_yaml = Path(sys.argv[2])
+
+    print("=" * 60)
+    print("研究メンバー情報処理スクリプト")
+    print("=" * 60)
+
+    try:
+        processor = MemberProcessor(members_yaml, template_file)
+        processor.load_members()
+        processor.load_template()
+        masked_path, real_path = processor.generate_files()
+
+        print("\n" + "=" * 60)
+        print("✓ 処理が完了しました")
+        print("=" * 60)
+        print(f"\n生成されたファイル:")
+        print(f"  1. {masked_path.name} (メンバー情報がプレースホルダーで表示)")
+        print(f"  2. {real_path.name} (実際のメンバー情報を含む提出用)")
+
+        print(f"\n次のステップ:")
+        print(f"  1. {masked_path.name} で内容を確認")
+        print(f"  2. {real_path.name} をコンパイルして提出用PDFを生成")
+
+    except FileNotFoundError as e:
+        print(f"\n❌ エラー: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n❌ 予期しないエラー: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
