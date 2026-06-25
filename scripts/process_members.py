@@ -32,14 +32,21 @@ class MemberProcessor:
         'role': '役割の説明（マスク済み）',
     }
 
-    def __init__(self, members_yaml_path, template_path):
+    def __init__(self, members_yaml_path, template_path, research_info_path=None):
         """
         Args:
             members_yaml_path: メンバー情報YAMLファイルのパス
             template_path: LaTeXテンプレートファイルのパス
+            research_info_path: research_info.tex のパス（任意）。
+                指定された場合、テンプレート内の `\\input{research_info...}` を
+                指定ファイルの内容で置換し、`\\X` 形式の変数参照を
+                定義値の文字列にインライン展開する。
+                差分検証時に研究基本情報の変更も latexdiff のハイライト対象に
+                するために使用する。
         """
         self.members_yaml_path = Path(members_yaml_path)
         self.template_path = Path(template_path)
+        self.research_info_path = Path(research_info_path) if research_info_path else None
         self.members_data = None
         self.template_content = None
 
@@ -66,6 +73,42 @@ class MemberProcessor:
 
         print(f"✓ テンプレートを読み込みました: {self.template_path}")
 
+    def expand_research_info(self, content):
+        """research_info.tex の内容を展開してテンプレートに直接埋め込む。
+
+        差分検証時、研究基本情報（タイトル・バージョン・期間等）の変更を
+        latexdiff のハイライト対象にするため、`\\input{research_info...}` を
+        除去し、`\\ResearchTitle` 等の変数参照を定義値の文字列に置換する。
+        research_info_path が None の場合は何もしない。
+        """
+        if self.research_info_path is None:
+            return content
+
+        if not self.research_info_path.exists():
+            raise FileNotFoundError(
+                f"research_info ファイルが見つかりません: {self.research_info_path}"
+            )
+
+        with open(self.research_info_path, 'r', encoding='utf-8') as f:
+            ri_content = f.read()
+
+        # \def\<name>{<value>} 形式のマクロ定義を抽出
+        defines = re.findall(r'\\def\\([A-Za-z@]+)\{([^}]*)\}', ri_content)
+
+        # \input{research_info...} 行を除去（テンプレート側で読み込み済みになる）
+        content = re.sub(r'\\input\{research_info[^}]*\}\s*\n?', '', content)
+
+        # 変数参照を定義値に置換
+        # 負の先読みで `\InstitutionName` が `\InstitutionFullName` を巻き込まないようにする
+        for name, value in defines:
+            pattern = r'\\' + re.escape(name) + r'(?![A-Za-z@_])'
+            # re.sub の置換文字列はバックスラッシュ等を解釈するため lambda で渡す
+            content = re.sub(pattern, lambda m, v=value: v, content)
+
+        print(f"✓ research_info を展開しました: {self.research_info_path} "
+              f"({len(defines)} 個の定義を inline 化)")
+        return content
+
     def replace_placeholders(self, content, use_real_data=True):
         """
         プレースホルダーを置換
@@ -77,6 +120,9 @@ class MemberProcessor:
         Returns:
             置換後のコンテンツ
         """
+        # research_info の展開（指定時のみ）
+        content = self.expand_research_info(content)
+
         result = content
 
         # タイトルページの研究代表者情報
@@ -406,7 +452,16 @@ class MemberProcessor:
 
 
 def main():
-    """メイン処理"""
+    """メイン処理
+
+    Usage:
+        process_members.py <template_file> [members_yaml] [research_info]
+
+    Args:
+        template_file: 処理対象の LaTeX テンプレート
+        members_yaml: メンバー情報 YAML（省略時 private/members.yaml）
+        research_info: research_info.tex（省略時は \\input ベース、指定時は inline 展開）
+    """
     # スクリプトのディレクトリからプロジェクトルートを取得
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
@@ -414,19 +469,22 @@ def main():
     # デフォルトパス
     members_yaml = project_root / 'private' / 'members.yaml'
     template_file = project_root / 'src' / 'protocol_template.tex'
+    research_info = None  # デフォルトは展開しない（\input をそのまま残す）
 
     # コマンドライン引数があれば上書き
     if len(sys.argv) > 1:
         template_file = Path(sys.argv[1])
     if len(sys.argv) > 2:
         members_yaml = Path(sys.argv[2])
+    if len(sys.argv) > 3:
+        research_info = Path(sys.argv[3])
 
     print("=" * 60)
     print("研究メンバー情報処理スクリプト")
     print("=" * 60)
 
     try:
-        processor = MemberProcessor(members_yaml, template_file)
+        processor = MemberProcessor(members_yaml, template_file, research_info)
         processor.load_members()
         processor.load_template()
         masked_path, real_path = processor.generate_files()

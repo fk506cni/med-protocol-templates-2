@@ -6,6 +6,7 @@
       "Read(**/*.pem)",
       "Read(**/.ssh/**)",
       "Read(private/members.yaml)",
+      "Read(private/members_*.yaml)",
       "Read(output/*_without_mask.pdf)",
       "Read(output/*_without_mask.tex)",
       "Read(src/*_without_mask.tex)",

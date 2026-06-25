@@ -218,12 +218,31 @@ nano src/my_disclosure.tex
 **研究メンバーの変更を含む差分を確認する場合**（倫理委員会提出用）：
 
 ```bash
-# 実際のメンバー情報を含む差分を生成
+# 現行 members.yaml を両側に適用（テンプレート変更のみが差分に反映）
 ./scripts/run_latexdiff_with_members.sh src/protocol_v1.tex src/protocol_v2.tex
 
-# メンバー情報YAMLを明示的に指定
+# メンバー情報YAMLを明示的に指定（両側に同じ yaml を適用）
 ./scripts/run_latexdiff_with_members.sh src/old.tex src/new.tex private/members.yaml
+
+# 🆕 旧版・新版の yaml を別々に指定（メンバー追加/更新/削除もハイライト）
+./scripts/run_latexdiff_with_members.sh \
+    src/protocol_v1.3.tex src/protocol_v1.4.tex \
+    private/members_第1.3版.yaml private/members.yaml
+
+# 🆕 メンバー情報＋研究基本情報両方の変更を差分に反映（6引数モード）
+./scripts/run_latexdiff_with_members.sh \
+    src/protocol_template_202512.tex src/protocol_template.tex \
+    private/members_第1.3版.yaml private/members.yaml \
+    src/research_info_202512.tex src/research_info.tex
 ```
+
+**引数仕様:** `old_tex new_tex [old_members_yaml [new_members_yaml [old_research_info [new_research_info]]]]`
+- 引数 3 のみ指定: 旧・新の両側に同じ yaml を適用（従来動作）
+- 引数 3, 4 指定: 旧側に `old_members_yaml`、新側に `new_members_yaml` を適用
+- 引数 5, 6 指定: 旧・新の `research_info.tex` を inline 展開して比較
+  - `\ResearchTitle`、`\ProtocolVersion`、`\ProtocolDate`、`\StudyEnd` 等の変数が
+    定義値の文字列に置換されるため、研究基本情報の変更も latexdiff のハイライト対象になります
+- メンバー追加・更新・削除、および研究基本情報の変更が差分ハイライトに反映されます
 
 **⚠️ 重要:**
 - 生成される差分PDFには**実際のメンバー情報とその変更**がハイライトされます
@@ -233,6 +252,118 @@ nano src/my_disclosure.tex
 **出力ファイル:**
 - `src/<basename>_diff_without_mask.tex` - 差分マークアップ付きTeX（エージェント除外）
 - `output/<basename>_diff_without_mask.pdf` - 差分PDF（エージェント除外）
+- `src/<basename>_old_without_mask.tex` - 同一テンプレート比較時の旧版保持ファイル（エージェント除外）
+
+#### 🔒 members.yaml と research_info.tex の自動スナップショット管理
+
+`compile_with_members.sh` は Step 0 として、コンパイル時に `src/research_info.tex` の `\ProtocolVersion` をキーに以下を **自動スナップショット** します（既存時は上書きしません）：
+
+- `private/members_<ProtocolVersion>.yaml`（メンバー情報）
+- `src/research_info_<ProtocolVersion>.tex`（研究基本情報）
+
+```bash
+./scripts/compile_with_members.sh src/protocol_template.tex
+# → private/members_第1.3版.yaml が未存在なら自動生成
+# → src/research_info_第1.3版.tex が未存在なら自動生成
+# → 既存時は保持（上書きなし）
+```
+
+**⚠️ 重要な順序**:
+スナップショットは「コンパイル時の **現行** 状態」を保存するため、**変更前に旧バージョンの状態でコンパイルしておく必要があります**。順序を間違えると旧バージョンの状態が失われます。
+
+**典型的な運用フロー（バージョン 1.3 → 1.4 の例）**:
+
+```bash
+# === 事前準備（旧版のスナップショット確保） ===
+# Step 0: 旧版（第1.3版）でコンパイル
+./scripts/compile_with_members.sh src/protocol_template.tex
+# → private/members_第1.3版.yaml と src/research_info_第1.3版.tex が
+#   未存在なら自動生成される（既に存在する場合は何もしない）
+
+# === 更新作業 ===
+# Step 1: メンバー情報を更新
+nano private/members.yaml
+
+# Step 2: 研究基本情報を更新
+nano src/research_info.tex
+#   \ProtocolVersion{第1.4版} に変更
+#   \ProtocolDate を更新
+#   \StudyEnd, \DataAcquisitionEnd 等の期間を更新
+
+# Step 3: テンプレート本文を更新（必要な場合）
+nano src/protocol_template.tex
+#   改訂履歴に第1.4版の行を追加、本文の変更等
+
+# === 新バージョンでコンパイル ===
+# Step 4: 新版（第1.4版）でコンパイル
+./scripts/compile_with_members.sh src/protocol_template.tex
+# → private/members_第1.4版.yaml と src/research_info_第1.4版.tex が
+#   新たに自動生成される
+
+# === 差分検証 ===
+# Step 5: 6 引数モードで包括的な差分PDF生成
+./scripts/run_latexdiff_with_members.sh \
+    src/protocol_template.tex src/protocol_template.tex \
+    private/members_第1.3版.yaml private/members_第1.4版.yaml \
+    src/research_info_第1.3版.tex src/research_info_第1.4版.tex
+```
+
+**順序の根拠**:
+- `compile_with_members.sh` は「コンパイル時点の `members.yaml` と `research_info.tex` を、その時点の `\ProtocolVersion` をキーに保存」する動作
+- したがって Step 0 を省略してから Step 1〜2 を行うと、旧版の状態を保存する機会を失う
+- 過去に旧版でコンパイル済みなら Step 0 は no-op になるが、念のため実行しておくと安全
+- スナップショットは **上書きしない** ため、Step 0 を実行しても既存ファイルは保護される
+
+**注意**: 同じバージョンのまま members.yaml や research_info.tex を修正しても新規スナップショットは作成されません（上書き防止のため）。その版の差分を取りたい場合は対応するスナップショットを削除してから再コンパイルしてください。
+
+#### 他のテンプレート（情報公開文書・説明文書・同意書）の差分ハイライト
+
+スナップショット（`private/members_<ver>.yaml` / `src/research_info_<ver>.tex`）は `\ProtocolVersion` をキーに **テンプレート横断で共有** されるため、同じスナップショットを使って他のテンプレートも差分ハイライトできます。第1引数と第2引数を該当テンプレートに差し替えるだけです。
+
+**情報公開文書（`disclosure_template.tex`）の場合**:
+
+```bash
+# Step 0〜4 で生成済みのスナップショットを再利用（必要なら disclosure 用にもコンパイル）
+./scripts/compile_with_members.sh src/disclosure_template.tex
+
+# 6 引数モードで差分PDF生成
+./scripts/run_latexdiff_with_members.sh \
+    src/disclosure_template.tex src/disclosure_template.tex \
+    private/members_第1.3版.yaml private/members_第1.4版.yaml \
+    src/research_info_第1.3版.tex src/research_info_第1.4版.tex
+
+# 出力: output/disclosure_template_diff_without_mask.pdf
+```
+
+**説明文書（`explanation_template.tex`）・同意書（`consent_template.tex`）の場合**:
+
+```bash
+./scripts/run_latexdiff_with_members.sh \
+    src/explanation_template.tex src/explanation_template.tex \
+    private/members_第1.3版.yaml private/members_第1.4版.yaml \
+    src/research_info_第1.3版.tex src/research_info_第1.4版.tex
+
+./scripts/run_latexdiff_with_members.sh \
+    src/consent_template.tex src/consent_template.tex \
+    private/members_第1.3版.yaml private/members_第1.4版.yaml \
+    src/research_info_第1.3版.tex src/research_info_第1.4版.tex
+```
+
+**ポイント**:
+- スナップショットを **再生成する必要はない**（同じ `\ProtocolVersion` のものをすべてのテンプレートで共有）
+- 同一テンプレート比較時は `<basename>_old_without_mask.tex` として旧版を退避する仕組みが各テンプレートで動作（衝突回避）
+- 出力ファイル名はテンプレートのベース名に応じて `<basename>_diff_without_mask.pdf` となる
+
+**旧版テンプレート本体を別ファイルで残している場合**（例: `src/disclosure_template_v1.3.tex` を保存している運用）:
+
+```bash
+./scripts/run_latexdiff_with_members.sh \
+    src/disclosure_template_v1.3.tex src/disclosure_template.tex \
+    private/members_第1.3版.yaml private/members_第1.4版.yaml \
+    src/research_info_第1.3版.tex src/research_info_第1.4版.tex
+```
+
+旧版・新版が別ファイルなので `_old_without_mask.tex` 退避は発動せず、各テンプレート専用の `_without_mask.tex` がそれぞれ生成されます。
 
 ### 🔒 研究メンバー情報の管理とコンパイル（推奨）
 
@@ -575,19 +706,62 @@ nano private/members.yaml
 <details>
 <summary><b>Q7. 研究メンバーの変更を含む差分を確認したい</b></summary>
 
-**A:** メンバー情報付き差分検証スクリプトを使用してください：
+**A:** 2-yaml 指定でメンバー変更もハイライトに反映できます：
 
 ```bash
-# 2つのバージョンの差分を生成（メンバー情報を含む）
-./scripts/run_latexdiff_with_members.sh src/protocol_v1.tex src/protocol_v2.tex
+# 旧版・新版それぞれの yaml スナップショットを指定
+./scripts/run_latexdiff_with_members.sh \
+    src/protocol_template.tex src/protocol_template.tex \
+    private/members_第1.3版.yaml private/members.yaml
 ```
+
+旧版スナップショット（`private/members_第1.3版.yaml` 等）は、`compile_with_members.sh` 実行時に `\ProtocolVersion` をキーに自動生成されます。
+
+**片方 yaml のみ指定（従来動作）**: `old_tex new_tex` だけ、または 3 引数目に 1 つの yaml を指定した場合、両側に同じメンバー情報が適用されるためメンバー変更は差分に出ません。テンプレート本文の変更のみを見たい場合に使用してください。
 
 生成される `*_diff_without_mask.pdf` には：
 - 研究内容の変更がハイライト表示されます
-- **研究メンバーの変更**もハイライト表示されます
+- 2-yaml 指定時は **研究メンバーの変更**もハイライト表示されます
 - エージェントから完全に除外されています
 
 **注意:** このPDFは倫理委員会への提出資料としてのみ使用してください。
+
+</details>
+
+<details>
+<summary><b>Q8. 研究基本情報（タイトル・期間・バージョン等）の変更を含む差分を確認したい</b></summary>
+
+**A:** 6 引数モードで `research_info.tex` も別々に指定すると、研究基本情報の変更もハイライトに反映できます：
+
+```bash
+./scripts/run_latexdiff_with_members.sh \
+    src/protocol_template.tex src/protocol_template.tex \
+    private/members_第1.3版.yaml private/members.yaml \
+    src/research_info_第1.3版.tex src/research_info.tex
+```
+
+`research_info.tex` の旧版スナップショット（`src/research_info_第1.3版.tex` 等）は、`compile_with_members.sh` 実行時に `\ProtocolVersion` をキーに自動生成されます。
+
+**仕組み**: 6 引数モードでは `process_members.py` が `\input{research_info...}` を除去し、`\ResearchTitle`、`\ProtocolVersion`、`\ProtocolDate`、`\StudyEnd` 等の変数参照を定義値の文字列に inline 展開します。これにより latexdiff が研究基本情報の変更を文字列差分として捕捉できます。
+
+</details>
+
+<details>
+<summary><b>Q9. スナップショットが自動生成されない</b></summary>
+
+**A:** 以下を確認してください：
+
+1. `compile_with_members.sh`（`docker/latex/compile.sh` ではなく）を使用しているか
+2. `src/research_info.tex` の `\ProtocolVersion` が定義されているか
+3. 同じバージョン名のスナップショットが既に存在していないか（上書きしないため）
+
+同じバージョンのまま members.yaml や research_info.tex を修正して新規スナップショットを取りたい場合：
+
+```bash
+rm private/members_<version>.yaml
+rm src/research_info_<version>.tex
+./scripts/compile_with_members.sh src/protocol_template.tex
+```
 
 </details>
 

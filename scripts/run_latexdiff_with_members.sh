@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # 研究メンバー情報を含む差分検証スクリプト
-# Usage: ./scripts/run_latexdiff_with_members.sh old_tex new_tex [members_yaml]
+# Usage: ./scripts/run_latexdiff_with_members.sh old_tex new_tex \
+#            [old_members_yaml [new_members_yaml [old_research_info [new_research_info]]]]
 
 set -e
 
@@ -18,31 +19,66 @@ NC='\033[0m' # No Color
 
 # 引数チェック
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <old_tex> <new_tex> [members_yaml]"
+    echo "Usage: $0 <old_tex> <new_tex> \\"
+    echo "          [old_members_yaml [new_members_yaml [old_research_info [new_research_info]]]]"
     echo ""
     echo "研究メンバー情報を含む2つのバージョンの研究計画書の差分を検証します。"
     echo ""
     echo "Arguments:"
-    echo "  old_tex        旧バージョンのTeXファイル"
-    echo "  new_tex        新バージョンのTeXファイル"
-    echo "  members_yaml   メンバー情報YAMLファイル（デフォルト: private/members.yaml）"
+    echo "  old_tex             旧バージョンのTeXファイル"
+    echo "  new_tex             新バージョンのTeXファイル"
+    echo "  old_members_yaml    旧バージョンのメンバー情報YAMLファイル"
+    echo "                      （省略時: private/members.yaml）"
+    echo "  new_members_yaml    新バージョンのメンバー情報YAMLファイル"
+    echo "                      （省略時: old_members_yaml と同一を使用）"
+    echo "  old_research_info   旧バージョンの research_info.tex"
+    echo "                      （省略時: テンプレートの \\input をそのまま使用）"
+    echo "  new_research_info   新バージョンの research_info.tex"
+    echo "                      （省略時: old_research_info と同一を使用）"
+    echo ""
+    echo "  research_info を指定すると、変数（タイトル・バージョン・期間等）が"
+    echo "  inline 展開され、研究基本情報の変更も latexdiff のハイライト対象になります。"
     echo ""
     echo "⚠️  重要: 生成される差分PDFには実際のメンバー情報が含まれます"
     echo ""
     echo "Examples:"
+    echo "  # 現行 members.yaml を両側に適用（従来動作）"
     echo "  $0 src/protocol_v1.tex src/protocol_v2.tex"
+    echo ""
+    echo "  # 指定 yaml を両側に適用（従来動作）"
     echo "  $0 src/protocol_old.tex src/protocol_new.tex private/members.yaml"
+    echo ""
+    echo "  # 旧 yaml と新 yaml を別々に指定（メンバー変更も差分に反映）"
+    echo "  $0 src/protocol_v1.3.tex src/protocol_v1.4.tex \\"
+    echo "     private/members_第1.3版.yaml private/members.yaml"
+    echo ""
+    echo "  # メンバー情報＋研究基本情報両方の変更を差分に反映"
+    echo "  $0 src/protocol_template_202512.tex src/protocol_template.tex \\"
+    echo "     private/members_第1.3版.yaml private/members.yaml \\"
+    echo "     src/research_info_202512.tex src/research_info.tex"
     exit 1
 fi
 
 OLD_TEX="$1"
 NEW_TEX="$2"
-MEMBERS_YAML="${3:-private/members.yaml}"
+OLD_MEMBERS_YAML="${3:-private/members.yaml}"
+NEW_MEMBERS_YAML="${4:-$OLD_MEMBERS_YAML}"
+OLD_RESEARCH_INFO="${5:-}"
+NEW_RESEARCH_INFO="${6:-$OLD_RESEARCH_INFO}"
 
 # 絶対パスに変換
 OLD_TEX_ABS="$PROJECT_ROOT/$OLD_TEX"
 NEW_TEX_ABS="$PROJECT_ROOT/$NEW_TEX"
-MEMBERS_YAML_ABS="$PROJECT_ROOT/$MEMBERS_YAML"
+OLD_MEMBERS_YAML_ABS="$PROJECT_ROOT/$OLD_MEMBERS_YAML"
+NEW_MEMBERS_YAML_ABS="$PROJECT_ROOT/$NEW_MEMBERS_YAML"
+OLD_RESEARCH_INFO_ABS=""
+NEW_RESEARCH_INFO_ABS=""
+if [ -n "$OLD_RESEARCH_INFO" ]; then
+    OLD_RESEARCH_INFO_ABS="$PROJECT_ROOT/$OLD_RESEARCH_INFO"
+fi
+if [ -n "$NEW_RESEARCH_INFO" ]; then
+    NEW_RESEARCH_INFO_ABS="$PROJECT_ROOT/$NEW_RESEARCH_INFO"
+fi
 
 echo ""
 echo -e "${BLUE}============================================================${NC}"
@@ -50,10 +86,13 @@ echo -e "${BLUE}  研究計画書差分検証（メンバー情報付き）${NC}
 echo -e "${BLUE}============================================================${NC}"
 echo ""
 echo -e "${YELLOW}設定:${NC}"
-echo "  旧バージョン   : $OLD_TEX"
-echo "  新バージョン   : $NEW_TEX"
-echo "  メンバー情報   : $MEMBERS_YAML"
-echo "  実行環境       : Docker コンテナ"
+echo "  旧バージョン       : $OLD_TEX"
+echo "  新バージョン       : $NEW_TEX"
+echo "  旧メンバー情報     : $OLD_MEMBERS_YAML"
+echo "  新メンバー情報     : $NEW_MEMBERS_YAML"
+echo "  旧研究基本情報     : ${OLD_RESEARCH_INFO:-(指定なし: \\input ベース)}"
+echo "  新研究基本情報     : ${NEW_RESEARCH_INFO:-(指定なし: \\input ベース)}"
+echo "  実行環境           : Docker コンテナ"
 echo ""
 echo -e "${RED}⚠️  警告: 生成される差分PDFには実際のメンバー情報が含まれます${NC}"
 echo ""
@@ -69,10 +108,25 @@ if [ ! -f "$NEW_TEX_ABS" ]; then
     exit 1
 fi
 
-if [ ! -f "$MEMBERS_YAML_ABS" ]; then
-    echo -e "${RED}❌ エラー: メンバー情報ファイルが見つかりません: $MEMBERS_YAML${NC}"
+if [ ! -f "$OLD_MEMBERS_YAML_ABS" ]; then
+    echo -e "${RED}❌ エラー: 旧メンバー情報ファイルが見つかりません: $OLD_MEMBERS_YAML${NC}"
     echo ""
-    echo -e "${YELLOW}ヒント: private/members.yaml.example を参考に private/members.yaml を作成してください。${NC}"
+    echo -e "${YELLOW}ヒント: private/members.yaml.example を参考にメンバー情報ファイルを作成してください。${NC}"
+    exit 1
+fi
+
+if [ ! -f "$NEW_MEMBERS_YAML_ABS" ]; then
+    echo -e "${RED}❌ エラー: 新メンバー情報ファイルが見つかりません: $NEW_MEMBERS_YAML${NC}"
+    exit 1
+fi
+
+if [ -n "$OLD_RESEARCH_INFO_ABS" ] && [ ! -f "$OLD_RESEARCH_INFO_ABS" ]; then
+    echo -e "${RED}❌ エラー: 旧研究基本情報ファイルが見つかりません: $OLD_RESEARCH_INFO${NC}"
+    exit 1
+fi
+
+if [ -n "$NEW_RESEARCH_INFO_ABS" ] && [ ! -f "$NEW_RESEARCH_INFO_ABS" ]; then
+    echo -e "${RED}❌ エラー: 新研究基本情報ファイルが見つかりません: $NEW_RESEARCH_INFO${NC}"
     exit 1
 fi
 
@@ -83,15 +137,20 @@ if [[ "$(docker images -q med-protocol-latex 2> /dev/null)" == "" ]]; then
     echo ""
 fi
 
-# Step 1: 旧バージョンの_without_mask.texを生成
-echo -e "${BLUE}[Step 1/4] 旧バージョンのメンバー情報処理${NC}"
+# Step 1: 旧バージョンの_without_mask.texを生成（旧メンバー情報＋旧研究基本情報を使用）
+echo -e "${BLUE}[Step 1/4] 旧バージョンのメンバー情報処理（$OLD_MEMBERS_YAML）${NC}"
 echo "----------------------------------------"
+
+OLD_PROCESS_ARGS=("/workspace/$OLD_TEX" "/workspace/$OLD_MEMBERS_YAML")
+if [ -n "$OLD_RESEARCH_INFO" ]; then
+    OLD_PROCESS_ARGS+=("/workspace/$OLD_RESEARCH_INFO")
+fi
 
 docker run --rm \
     --user $(id -u):$(id -g) \
     -v "$PROJECT_ROOT:/workspace" \
     med-protocol-latex \
-    python3 /workspace/scripts/process_members.py "/workspace/$OLD_TEX" "/workspace/$MEMBERS_YAML"
+    python3 /workspace/scripts/process_members.py "${OLD_PROCESS_ARGS[@]}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ 旧バージョンのメンバー情報処理に失敗しました${NC}"
@@ -102,17 +161,31 @@ OLD_BASE=$(basename "$OLD_TEX" .tex)
 OLD_DIR=$(dirname "$OLD_TEX")
 OLD_WITHOUT_MASK="${OLD_DIR}/${OLD_BASE}_without_mask.tex"
 
+# 同一テンプレートで yaml のみ差し替えて比較する場合、Step2 が
+# OLD_WITHOUT_MASK を上書きしてしまうため、別名で保持する
+if [ "$OLD_TEX" = "$NEW_TEX" ]; then
+    OLD_WITHOUT_MASK_PRESERVED="${OLD_DIR}/${OLD_BASE}_old_without_mask.tex"
+    cp "$OLD_WITHOUT_MASK" "$OLD_WITHOUT_MASK_PRESERVED"
+    OLD_WITHOUT_MASK="$OLD_WITHOUT_MASK_PRESERVED"
+    echo -e "${YELLOW}ℹ 同一テンプレート比較のため旧版を保持: $OLD_WITHOUT_MASK${NC}"
+fi
+
 echo ""
 
-# Step 2: 新バージョンの_without_mask.texを生成
-echo -e "${BLUE}[Step 2/4] 新バージョンのメンバー情報処理${NC}"
+# Step 2: 新バージョンの_without_mask.texを生成（新メンバー情報＋新研究基本情報を使用）
+echo -e "${BLUE}[Step 2/4] 新バージョンのメンバー情報処理（$NEW_MEMBERS_YAML）${NC}"
 echo "----------------------------------------"
+
+NEW_PROCESS_ARGS=("/workspace/$NEW_TEX" "/workspace/$NEW_MEMBERS_YAML")
+if [ -n "$NEW_RESEARCH_INFO" ]; then
+    NEW_PROCESS_ARGS+=("/workspace/$NEW_RESEARCH_INFO")
+fi
 
 docker run --rm \
     --user $(id -u):$(id -g) \
     -v "$PROJECT_ROOT:/workspace" \
     med-protocol-latex \
-    python3 /workspace/scripts/process_members.py "/workspace/$NEW_TEX" "/workspace/$MEMBERS_YAML"
+    python3 /workspace/scripts/process_members.py "${NEW_PROCESS_ARGS[@]}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}❌ 新バージョンのメンバー情報処理に失敗しました${NC}"

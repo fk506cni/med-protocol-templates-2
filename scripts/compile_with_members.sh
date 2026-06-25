@@ -102,6 +102,33 @@ if [ ! -f "$MEMBERS_YAML_ABS" ]; then
     exit 1
 fi
 
+# Step 0: 現行 members.yaml と research_info.tex をバージョン名でスナップショット保存
+# （run_latexdiff_with_members.sh の旧版/新版別指定機能と対応）
+RESEARCH_INFO="$PROJECT_ROOT/src/research_info.tex"
+if [ -f "$RESEARCH_INFO" ]; then
+    PROTOCOL_VERSION=$(grep '\\def\\ProtocolVersion{' "$RESEARCH_INFO" | sed 's/.*{//; s/}//')
+    if [ -n "$PROTOCOL_VERSION" ]; then
+        # メンバー情報のスナップショット
+        SNAPSHOT_YAML="$PROJECT_ROOT/private/members_${PROTOCOL_VERSION}.yaml"
+        if [ ! -f "$SNAPSHOT_YAML" ]; then
+            cp "$MEMBERS_YAML_ABS" "$SNAPSHOT_YAML"
+            echo -e "${GREEN}✓ メンバー情報をスナップショット保存: private/members_${PROTOCOL_VERSION}.yaml${NC}"
+        else
+            echo -e "${BLUE}ℹ 既存スナップショットを保持: private/members_${PROTOCOL_VERSION}.yaml（上書きしません）${NC}"
+        fi
+
+        # 研究基本情報のスナップショット
+        SNAPSHOT_RESEARCH_INFO="$PROJECT_ROOT/src/research_info_${PROTOCOL_VERSION}.tex"
+        if [ ! -f "$SNAPSHOT_RESEARCH_INFO" ]; then
+            cp "$RESEARCH_INFO" "$SNAPSHOT_RESEARCH_INFO"
+            echo -e "${GREEN}✓ 研究基本情報をスナップショット保存: src/research_info_${PROTOCOL_VERSION}.tex${NC}"
+        else
+            echo -e "${BLUE}ℹ 既存スナップショットを保持: src/research_info_${PROTOCOL_VERSION}.tex（上書きしません）${NC}"
+        fi
+        echo ""
+    fi
+fi
+
 # Dockerイメージのビルド確認
 if [[ "$(docker images -q med-protocol-latex 2> /dev/null)" == "" ]]; then
     echo -e "${YELLOW}⚠ Dockerイメージが見つかりません。ビルドを開始します...${NC}"
