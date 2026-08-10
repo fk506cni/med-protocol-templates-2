@@ -20,6 +20,11 @@ from pathlib import Path
 class MemberProcessor:
     """研究メンバー情報処理クラス"""
 
+    # 項目の区切り文字（全角スペース U+3000）
+    # LuaLaTeX の日本語組版では和文文字どうしの間の半角スペース・改行が除去されるため、
+    # 氏名・所属・職位などの区切りには全角スペースを用いる必要がある。
+    SEP = '　'
+
     # マスク用のプレースホルダー
     MASK_VALUES = {
         'name': '研究メンバー（マスク済み）',
@@ -181,6 +186,8 @@ class MemberProcessor:
         org = self.members_data.get('research_organization', {})
 
         # 研究責任者（分担研究者と同じ形式でフォーマット）
+        # 役割は members.yaml の role から出力する。テンプレート側に役割の文言を
+        # 直書きする運用に変える場合は include_role=False として重複を避けること。
         pi = org.get('principal_investigator', {})
         pi_text = self._format_member_info(pi, use_real_data, include_role=True, use_co_investigator_format=True)
         content = self._replace_placeholder(content, 'RESEARCH_PI', pi_text)
@@ -268,10 +275,24 @@ class MemberProcessor:
         """相談窓口セクションを置換"""
         consult = self.members_data.get('consultation', {})
 
+        # 注: 現行のテンプレートは個別フィールドのプレースホルダーを用いるため、
+        #     この一括プレースホルダーは後方互換のために残している。
         if use_real_data:
-            consult_text = f"{consult.get('affiliation', '')} {consult.get('position', '')}\n{consult.get('contact_person', '')}\n電話： {consult.get('tel', '')}"
+            consult_text = (
+                "\\begin{itemize}\n"
+                f"\\item {consult.get('affiliation', '')}\n"
+                f"\\item 担当者：{consult.get('position', '')}{self.SEP}{consult.get('contact_person', '')}\n"
+                f"\\item 電話：{consult.get('tel', '')}\n"
+                "\\end{itemize}"
+            )
         else:
-            consult_text = f"{self.MASK_VALUES['affiliation']} {self.MASK_VALUES['position']}\n{self.MASK_VALUES['name']}\n電話： {self.MASK_VALUES['tel']}"
+            consult_text = (
+                "\\begin{itemize}\n"
+                f"\\item {self.MASK_VALUES['affiliation']}\n"
+                f"\\item 担当者：{self.MASK_VALUES['position']}{self.SEP}{self.MASK_VALUES['name']}\n"
+                f"\\item 電話：{self.MASK_VALUES['tel']}\n"
+                "\\end{itemize}"
+            )
 
         content = self._replace_placeholder(content, 'CONSULTATION_CONTACT', consult_text)
 
@@ -297,16 +318,21 @@ class MemberProcessor:
             use_real_data: Trueの場合は実データ、Falseの場合はマスクデータを使用
             include_role: 役割を含めるかどうか
             use_co_investigator_format: Trueの場合は分担研究者と同じ（役割→所属→itemize）形式でフォーマット
+
+        Note:
+            項目の区切りには全角スペース（U+3000）を用いる。LuaLaTeX の日本語組版では
+            和文文字どうしの間の半角スペースおよび改行が除去されるため、半角スペースや
+            改行で区切ると PDF 上で項目が連結して表示される。
         """
         if use_co_investigator_format:
             if use_real_data:
                 role_text = member.get('role', '')
                 affiliation_text = member.get('affiliation', '')
-                member_line = f"  \\item {member.get('position', '')} {member.get('name', '')}"
+                member_line = f"  \\item {member.get('position', '')}{self.SEP}{member.get('name', '')}"
             else:
                 role_text = self.MASK_VALUES['role']
                 affiliation_text = self.MASK_VALUES['affiliation']
-                member_line = f"  \\item {self.MASK_VALUES['position']} {self.MASK_VALUES['name']}"
+                member_line = f"  \\item {self.MASK_VALUES['position']}{self.SEP}{self.MASK_VALUES['name']}"
 
             if include_role and role_text:
                 return f"""\\textbf{{{role_text}}}
@@ -323,22 +349,22 @@ class MemberProcessor:
         else:
             if use_real_data:
                 lines = [
-                    f"氏名: {member.get('name', '')}",
-                    f"所属: {member.get('affiliation', '')}",
-                    f"職位: {member.get('position', '')}",
+                    f"氏名：{member.get('name', '')}",
+                    f"所属：{member.get('affiliation', '')}",
+                    f"職位：{member.get('position', '')}",
                 ]
                 if include_role and 'role' in member:
-                    lines.append(f"役割: {member.get('role', '')}")
+                    lines.append(f"役割：{member.get('role', '')}")
             else:
                 lines = [
-                    f"氏名: {self.MASK_VALUES['name']}",
-                    f"所属: {self.MASK_VALUES['affiliation']}",
-                    f"職位: {self.MASK_VALUES['position']}",
+                    f"氏名：{self.MASK_VALUES['name']}",
+                    f"所属：{self.MASK_VALUES['affiliation']}",
+                    f"職位：{self.MASK_VALUES['position']}",
                 ]
                 if include_role:
-                    lines.append(f"役割: {self.MASK_VALUES['role']}")
+                    lines.append(f"役割：{self.MASK_VALUES['role']}")
 
-            return '\n'.join(lines)
+            return self.SEP.join(lines)
 
     def _format_co_investigators(self, co_investigators, use_real_data):
         """分担研究者リストをフォーマット（旧形式: フラットリスト）"""
@@ -394,34 +420,42 @@ class MemberProcessor:
                 member_lines = []
                 for member in members:
                     if use_real_data:
-                        member_line = f"  \\item {member.get('position', '')} {member.get('name', '')}"
+                        member_line = f"  \\item {member.get('position', '')}{self.SEP}{member.get('name', '')}"
                     else:
-                        member_line = f"  \\item {self.MASK_VALUES['position']} {self.MASK_VALUES['name']}"
+                        member_line = f"  \\item {self.MASK_VALUES['position']}{self.SEP}{self.MASK_VALUES['name']}"
                     member_lines.append(member_line)
 
                 if member_lines:
                     dept_section = f"{dept_line}\n\\begin{{itemize}}\n" + "\n".join(member_lines) + "\n\\end{itemize}\n"
                     dept_sections.append(dept_section)
 
-            role_section += '\n\\vspace{{0.5em}}\n\n'.join(dept_sections)
+            role_section += '\n\\vspace{0.5em}\n\n'.join(dept_sections)
             sections.append(role_section)
 
-        return '\n\\vspace{{1em}}\n\n'.join(sections)
+        return '\n\\vspace{1em}\n\n'.join(sections)
 
     def _format_office_info(self, office, use_real_data):
-        """研究事務局情報をフォーマット"""
+        """研究事務局情報をフォーマット（相談窓口と同じ箇条書きの体裁に揃える）"""
         if use_real_data:
-            return f"""{office.get('affiliation', '')}
-{office.get('position', '')} {office.get('name', '')}
-
-{office.get('address', '')}
-電話： {office.get('tel', '')}"""
+            affiliation = office.get('affiliation', '')
+            position = office.get('position', '')
+            name = office.get('name', '')
+            address = office.get('address', '')
+            tel = office.get('tel', '')
         else:
-            return f"""{self.MASK_VALUES['affiliation']}
-{self.MASK_VALUES['position']} {self.MASK_VALUES['name']}
+            affiliation = self.MASK_VALUES['affiliation']
+            position = self.MASK_VALUES['position']
+            name = self.MASK_VALUES['name']
+            address = self.MASK_VALUES['address']
+            tel = self.MASK_VALUES['tel']
 
-{self.MASK_VALUES['address']}
-電話： {self.MASK_VALUES['tel']}"""
+        return (
+            "\\begin{itemize}\n"
+            f"\\item {affiliation}{self.SEP}{position}{self.SEP}{name}\n"
+            f"\\item {address}\n"
+            f"\\item 電話：{tel}\n"
+            "\\end{itemize}"
+        )
 
     def _replace_placeholder(self, content, placeholder, value):
         """プレースホルダーを置換"""

@@ -1,0 +1,54 @@
+% ===================================================================
+% 3文書（研究計画書・説明文書・同意書）で共有する体裁設定
+%
+% 京都大学 医の倫理委員会「書類を作成する際のチェックリスト」の
+%   ・使用されるフォントは「MSゴシック」「MS明朝」としてください
+%   ・インデント、フォントサイズ、項目番号の表記の体裁を整えてください
+% に対応するため、和文フォントと見出しの番号様式をこのファイルに集約する。
+% kyodai-protocol.cls、explanation_template.tex、consent_template.tex の
+% いずれからも読み込まれるため、3文書の体裁が自動的に揃う。
+% ===================================================================
+
+% -------------------------------------------------------------------
+% 和文フォント: IPA明朝 / IPAゴシック
+%
+% チェックリストは「MS明朝」「MSゴシック」を指定するが、当該フォントは
+% Microsoft専有でありビルド環境（texlive/texlive イメージ）に導入できない。
+% 規定の趣旨である「Windowsとの互換性による文字化けの防止」はPDFへの
+% フォント埋め込みによって満たしたうえで、書体としては指定に最も近い
+% 無償の標準和文フォント（IPA明朝／IPAゴシック）を用いる。
+% -------------------------------------------------------------------
+\RequirePackage[ipa]{luatexja-preset}
+
+% -------------------------------------------------------------------
+% 見出しの番号様式
+%
+% 医の倫理委員会が示す「研究計画書に記載すべき事項」および実際に承認された
+% 計画書で用いられている表記に揃える。
+%   section       → 1.  2.  3. …
+%   subsection    → 1)  2)  3) …
+%   subsubsection → ①  ②  ③ …
+%   paragraph     → 番号なし（太字見出し）
+% -------------------------------------------------------------------
+\RequirePackage{titlesec}
+
+\newcommand{\jpcirclednum}[1]{%
+  \ifcase#1\or ①\or ②\or ③\or ④\or ⑤\or ⑥\or ⑦\or ⑧\or ⑨\or ⑩%
+  \or ⑪\or ⑫\or ⑬\or ⑭\or ⑮\or ⑯\or ⑰\or ⑱\or ⑲\or ⑳\else (\number#1)\fi}
+
+\renewcommand{\thesection}{\arabic{section}.}
+\renewcommand{\thesubsection}{\arabic{subsection})}
+\renewcommand{\thesubsubsection}{\jpcirclednum{\value{subsubsection}}}
+
+% 下位の見出しほど左を字下げし、階層を視覚的に示す
+\titleformat{\section}[hang]{\normalfont\Large\bfseries}{\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titleformat{\subsection}[hang]{\normalfont\large\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{1em}{3.0ex plus 1ex minus .2ex}{1.8ex plus .2ex}
+\titleformat{\subsubsection}[hang]{\normalfont\normalsize\bfseries}{\thesubsubsection}{0.4em}{}
+\titlespacing*{\subsubsection}{2em}{2.6ex plus 1ex minus .2ex}{1.4ex plus .2ex}
+\titleformat{\paragraph}[hang]{\normalfont\normalsize\bfseries}{}{0em}{}
+\titlespacing*{\paragraph}{3em}{2.2ex plus 0.8ex minus .2ex}{1.0ex plus .2ex}
+
+% 番号を付す深さはsubsubsection（①）まで。paragraphは番号なしの太字見出し。
+\setcounter{secnumdepth}{3}

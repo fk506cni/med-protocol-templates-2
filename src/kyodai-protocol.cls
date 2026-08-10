@@ -1,13 +1,18 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{kyodai-protocol}[2025/09/30 v1.2 Kyoto University Medical Ethics Protocol Template]
+\ProvidesClass{kyodai-protocol}[2026/08/10 v1.3 Kyoto University Medical Ethics Protocol Template]
 
 % LuaLaTeX用の日本語文書クラス
 \LoadClass[a4paper,11pt,lualatex,ja=standard]{bxjsarticle}
+
+% 3文書共通の体裁設定（和文フォント・見出しの番号様式）
+% 説明文書・同意書も同じファイルを読み込むため、3文書の体裁が揃う
+\input{kyodai-style.tex}
 
 % 必要なパッケージ（geometryはbxjsarticleが読み込むので、オプションだけ指定）
 \geometry{margin=25mm}
 \RequirePackage{graphicx}  % LuaLaTeXは画像形式を自動判定
 \RequirePackage{xcolor}
+\RequirePackage{amsmath}   % 数式環境（equation, \eqref 等）
 \RequirePackage{fancyhdr}
 \RequirePackage{titlesec}
 \RequirePackage{enumitem}
@@ -53,7 +58,7 @@
         {\Large 研究計画書 \par}
         \vspace{2cm}
 
-        {\Large\bfseries 研究代表者 \par}
+        {\Large\bfseries 研究責任者 \par}
         \vspace{0.5cm}
         {\large \@piname \par}
         {\normalsize \@piaffiliation \par}
@@ -75,24 +80,31 @@
         {\normalsize \@protocolversion \par}
         {\normalsize \@protocoldate \par}
     \end{titlepage}
+    % titlepage環境はページ番号を1にリセットするが、表紙自体を1ページ目として
+    % 数えるため、本文は2ページ目から採番する
+    \setcounter{page}{2}
 }
 
 \makeatother
 
-% セクション書式設定（改ページを防ぐ）
-\titleformat{\section}[hang]{\normalfont\Large\bfseries}{\thesection}{1em}{}
-\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
-\titleformat{\subsection}[hang]{\normalfont\large\bfseries}{\thesubsection}{1em}{}
-\titleformat{\subsubsection}[hang]{\normalfont\normalsize\bfseries}{\thesubsubsection}{1em}{}
+% 見出しの書式（番号様式・字下げ）は kyodai-style.tex で定義
 
 % セクションで改ページしないように設定
 \makeatletter
 \renewcommand{\sectionmark}[1]{\markboth{#1}{}}
 \makeatother
 
-% 目次設定
+% 目次設定（見出しの番号様式は kyodai-style.tex で定義）
 \setcounter{tocdepth}{1}  % 目次の深さをsectionレベル（1）まで
-\setcounter{secnumdepth}{3}  % セクション番号はsubsectionレベル（3）まで
+
+% 目次の体裁: ドットリーダーでページ番号まで導く
+\renewcommand{\cftsecfont}{\normalfont}
+\renewcommand{\cftsecpagefont}{\normalfont}
+\renewcommand{\cftdotsep}{2}
+\renewcommand{\cftsecleader}{\normalfont\cftdotfill{\cftdotsep}}
+\renewcommand{\cftsecaftersnumb}{\hspace{0.3em}}
+\setlength{\cftsecnumwidth}{2.6em}
+\setlength{\cftbeforesecskip}{0.6ex plus 0.2ex}
 
 
 % リスト設定
@@ -138,7 +150,7 @@
     \fbox{\begin{minipage}{0.9\textwidth}
         \textbf{機密情報に関する注意}
 
-        本研究計画書は、機密情報であり、本研究に参加する医療機関、研究責任者、研究分担者、研究協力者、倫理審査委員会等の臨床研究関係者に対して提供されるものです。
+        本研究計画書は、機密情報であり、本研究に参加する医療機関、研究責任者、分担研究者、研究協力者、倫理審査委員会等の臨床研究関係者に対して提供されるものです。
 
         本研究計画書は、研究対象者に対して本研究の内容を説明する場合を除き、研究責任者の文書による同意なしに、いかなる第三者にも開示または本研究の目的以外に利用することはできません。
     \end{minipage}}

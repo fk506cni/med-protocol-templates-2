@@ -9,6 +9,10 @@
 \setlength{\parskip}{0pt}
 \setlength{\baselineskip}{18pt}
 
+% 3文書共通の体裁設定（和文フォント・見出しの番号様式）
+% 研究計画書（kyodai-protocol.cls）と同じファイルを読み込む
+\input{kyodai-style.tex}
+
 % 研究の基本情報を読み込み（protocol_template.texと共通）
 \input{research_info.tex}
 
@@ -16,6 +20,10 @@
 
 \begin{center}
 {\LARGE \textbf{研究参加の同意書}}
+
+\vspace{0.5em}
+
+{\small \ProtocolVersion\hspace{1em}\ProtocolDate}
 \end{center}
 
 \vspace{1em}

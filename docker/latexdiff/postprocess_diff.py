@@ -149,6 +149,33 @@ def process_abstract_diff(content):
     new_abstract = '\n'.join(new_lines)
     return content[:abstract_start] + new_abstract + content[abstract_end:]
 
+def make_markup_cjk_safe(content):
+    """Replace ulem-based diff markup with colour-only markup.
+
+    latexdiff の既定（UNDERLINE タイプ）は \\DIFadd に ulem の \\uwave、
+    \\DIFdel に \\sout を用いる。ulem は空白位置でしか行分割できないため、
+    分かち書きをしない和文では変更箇所が 1 つの分割不能な塊となり、
+    長い変更が版面の右端からはみ出して「見切れる」。
+    和文でも正しく折り返すよう、取り消し線・波下線を外して色のみで標示する。
+    （青字＝追加、赤字＝削除）
+    """
+    replacements = [
+        (r'\providecommand{\DIFadd}[1]{{\protect\color{blue}\uwave{#1}}}',
+         r'\providecommand{\DIFadd}[1]{{\protect\color{blue}#1}}'),
+        (r'\providecommand{\DIFdel}[1]{{\protect\color{red}\sout{#1}}}',
+         r'\providecommand{\DIFdel}[1]{{\protect\color{red}#1}}'),
+        # listings 環境内の差分標示も同様に色のみとする
+        (r'moredelim=[il][\color{red}\sout]',
+         r'moredelim=[il][\color{red}]'),
+        (r'moredelim=[il][\color{blue}\uwave]',
+         r'moredelim=[il][\color{blue}]'),
+    ]
+
+    for old, new in replacements:
+        content = content.replace(old, new)
+
+    return content
+
 def main():
     if len(sys.argv) != 2:
         print("Usage: postprocess_diff.py <diff_file>")
@@ -166,10 +193,14 @@ def main():
     # Process abstract
     content = process_abstract_diff(content)
 
+    # 和文が折り返せるよう ulem ベースの標示を色のみの標示に置き換える
+    content = make_markup_cjk_safe(content)
+
     with open(diff_file, 'w', encoding='utf-8') as f:
         f.write(content)
 
     print(f"Post-processed {diff_file}: enabled highlighting for title and abstract")
+    print("  差分標示: 青字＝追加、赤字＝削除（和文の行分割のため取り消し線・下線は使用しません）")
 
 if __name__ == '__main__':
     main()

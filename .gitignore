@@ -19,6 +19,15 @@ output/*_with_mask.pdf
 output/*_with_mask.tex
 src/*_with_mask.tex
 
+# 提出パッケージ（package_submission.sh の出力）
+# without_mask のPDF・TeX（個人情報）を含むため絶対にコミットしないこと
+# アップロード失敗時・--no-upload 時にプロジェクトルートへ残るフォルダを含む
+# 形式: <プロジェクト名>_<バージョン>_<YYYYMMDD>_<HHMMSS>/
+/*_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]/
+/*_[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].zip
+*_submission_*.zip
+submission_package/
+
 # 個人情報を含む差分検証ファイル
 output/*_diff_without_mask.pdf
 output/*_diff_without_mask.tex
@@ -84,3 +93,11 @@ custom_output/
 # Temporary markdown files
 prompt.md
 message.md
+
+# 参考資料（外部由来の資料を置く。フォルダだけをgit管理し、中身は追跡しない）
+refs/*
+!refs/.gitkeep
+
+# 一時ファイル置き場（コミットメッセージの退避先など）
+jank/*
+!jank/.gitkeep

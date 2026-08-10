@@ -6,10 +6,13 @@
 # 機能:
 # - src/research_info.tex からバージョン情報を取得
 # - output/ フォルダの PDF ファイルをリネーム
-# - ソースコード (src/) と合わせて zip にまとめる
-# - プロジェクト名とタイムスタンプ付きのファイル名で zip 作成
-# - 古い zip ファイルは _archives フォルダに移動
-# - 最新版の zip を Google Drive にアップロード
+# - ソースコード (src/) と合わせてパッケージフォルダにまとめる
+# - プロジェクト名・バージョン・タイムスタンプ付きのフォルダ名で作成
+# - Google Drive の tmp/<プロジェクト名>/<パッケージ名>/ へ
+#   フォルダごとアップロード（圧縮なし）
+#   ＝ H:\マイドライブ\tmp\<プロジェクト名>\<パッケージ名>\
+# - アップロード成功時は一時パッケージを削除、失敗/--no-upload 時のみ
+#   プロジェクトルートに残す
 #
 # 使用方法:
 #   ./scripts/package_submission.sh [オプション]
@@ -36,10 +39,11 @@ show_help() {
 機能:
   - src/research_info.tex からバージョン情報を取得
   - output/ フォルダの PDF ファイルを倫理委員会提出用にリネーム
-  - ソースコード (src/) と合わせて ZIP にまとめる
-  - プロジェクト名とタイムスタンプ付きのファイル名で ZIP 作成
-  - 古い ZIP ファイルは _archives フォルダに移動
-  - 最新版の ZIP を Google Drive にアップロード
+  - ソースコード (src/) と合わせてパッケージフォルダにまとめる
+  - プロジェクト名・バージョン・タイムスタンプ付きのフォルダ名で作成
+  - Google Drive へフォルダごとアップロード（圧縮なし）
+  - アップロード成功時は一時パッケージを削除
+  - アップロード失敗 / --no-upload 時のみプロジェクトルートに残す
 
 オプション:
   --no-upload    Google Drive へのアップロードをスキップ
@@ -58,10 +62,19 @@ show_help() {
   ※ diff がつくファイルも同様にリネームされます
   ※ with_mask がつくファイルも同様にリネームされます
 
+パッケージの構成:
+  <プロジェクト名>_<バージョン>_<タイムスタンプ>/
+    ├── 研究実施計画書_第1.0版.pdf      … PDF はフォルダ直下
+    ├── 説明文書_第1.0版.pdf
+    ├── 同意書_第1.0版.pdf
+    ├── README.md
+    └── src/                             … ソースは src/ サブフォルダ
+
 出力:
-  - プロジェクトルート: 最新の ZIP ファイル
-  - _archives/: 過去の ZIP ファイル
-  - Google Drive (gdrive:tmp): 最新の ZIP ファイル（--no-upload が指定されていない場合）
+  - Google Drive (gdrive:tmp/<プロジェクト名>/<パッケージ名>/):
+      アップロード成功時、フォルダごと配置（圧縮なし）
+      Windows からは H:\\マイドライブ\\tmp\\<プロジェクト名>\\<パッケージ名>\\
+  - プロジェクトルート: --no-upload またはアップロード失敗時のみフォルダを残す
 
 EOF
     exit 0
@@ -125,15 +138,19 @@ echo ""
 
 # タイムスタンプを生成
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-ZIP_NAME="${PROJECT_NAME}_${TIMESTAMP}.zip"
+PACKAGE_NAME="${PROJECT_NAME}_${VERSION}_${TIMESTAMP}"
 
-echo -e "${BLUE}📦 パッケージ名: $ZIP_NAME${NC}"
+echo -e "${BLUE}📦 パッケージ名: $PACKAGE_NAME${NC}"
+
+# Windows（Google Drive デスクトップ）から見たときのパス。
+# バックスラッシュを含むため、表示には echo -e ではなく printf を用いること
+WINDOWS_PATH="H:\\マイドライブ\\tmp\\${PROJECT_NAME}\\${PACKAGE_NAME}\\"
 echo ""
 
-# 一時ディレクトリを作成
+# 一時ディレクトリを作成（PDF はフォルダ直下、ソースは src/ サブフォルダ）
 TEMP_DIR=$(mktemp -d)
-PACKAGE_DIR="$TEMP_DIR/${PROJECT_NAME}_${VERSION}"
-mkdir -p "$PACKAGE_DIR/documents"
+PACKAGE_DIR="$TEMP_DIR/$PACKAGE_NAME"
+mkdir -p "$PACKAGE_DIR"
 mkdir -p "$PACKAGE_DIR/src"
 
 echo -e "${BLUE}📋 ファイルをコピー中...${NC}"
@@ -176,12 +193,12 @@ else
             # リネーム対応表に該当があればリネーム
             if [ -n "${RENAME_MAP[$BASE_NAME]}" ]; then
                 NEW_NAME="${RENAME_MAP[$BASE_NAME]}"
-                cp "$pdf" "$PACKAGE_DIR/documents/$NEW_NAME"
+                cp "$pdf" "$PACKAGE_DIR/$NEW_NAME"
                 echo -e "  ${GREEN}✓${NC} $BASE_NAME → $NEW_NAME"
                 PDF_COUNT=$((PDF_COUNT + 1))
             else
                 # 対応表にない PDF はそのままコピー
-                cp "$pdf" "$PACKAGE_DIR/documents/$BASE_NAME"
+                cp "$pdf" "$PACKAGE_DIR/$BASE_NAME"
                 echo -e "  ${GREEN}✓${NC} $BASE_NAME （リネームなし）"
                 PDF_COUNT=$((PDF_COUNT + 1))
             fi
@@ -217,67 +234,29 @@ if [ -f "$PROJECT_ROOT/README.md" ]; then
     echo -e "${GREEN}✓ README.md をコピーしました${NC}"
 fi
 
-# ZIP を作成（UTF-8 エンコーディングを使用してWindows互換性を確保）
-echo -e "${BLUE}🗜️  ZIP ファイルを作成中...${NC}"
-
-# Python の zipfile モジュールを使用して UTF-8 対応 ZIP を作成
-# これによりWindowsでの日本語ファイル名の文字化けを防止
-python3 -c "
-import zipfile
-import os
-
-temp_dir = '$TEMP_DIR'
-zip_name = '$ZIP_NAME'
-package_dir = '$PACKAGE_DIR'
-
-output_path = os.path.join(temp_dir, zip_name)
-
-# UTF-8対応のZIPファイルを作成
-with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-    # すべてのファイルを再帰的に追加
-    for root, dirs, files in os.walk(package_dir):
-        for file in files:
-            file_path = os.path.join(root, file)
-            # ZIP内のパスを相対パスに（ルートディレクトリ名を含む）
-            arcname = os.path.relpath(file_path, os.path.dirname(package_dir))
-            zipf.write(file_path, arcname)
-        # 空のディレクトリも追加
-        for dir_name in dirs:
-            dir_path = os.path.join(root, dir_name)
-            arcname = os.path.relpath(dir_path, os.path.dirname(package_dir))
-            # ディレクトリエントリを追加（末尾に/を付ける）
-            zipf.write(dir_path, arcname + '/')
-"
-
-# 古い ZIP を _archives に移動
+# 旧形式（ZIP）の後片付け: プロジェクトルートに残っている ZIP を _archives へ移動
+# ※ 本スクリプトは ZIP を作らなくなったため、過去に作られたものだけが対象
 ARCHIVES_DIR="$PROJECT_ROOT/_archives"
-mkdir -p "$ARCHIVES_DIR"
-
 OLD_ZIPS=$(find "$PROJECT_ROOT" -maxdepth 1 -name "${PROJECT_NAME}_*.zip" -type f)
 
 if [ -n "$OLD_ZIPS" ]; then
-    echo -e "${BLUE}📦 古い ZIP ファイルを _archives に移動中...${NC}"
+    mkdir -p "$ARCHIVES_DIR"
+    echo -e "${BLUE}📦 旧形式の ZIP ファイルを _archives に移動中...${NC}"
     for old_zip in $OLD_ZIPS; do
-        OLD_ZIP_NAME=$(basename "$old_zip")
         mv "$old_zip" "$ARCHIVES_DIR/"
-        echo -e "  ${GREEN}✓${NC} $OLD_ZIP_NAME → _archives/"
+        echo -e "  ${GREEN}✓${NC} $(basename "$old_zip") → _archives/"
     done
+    echo ""
 fi
 
-# 新しい ZIP をプロジェクトルートに配置
-mv "$TEMP_DIR/$ZIP_NAME" "$PROJECT_ROOT/"
-echo -e "${GREEN}✓ $ZIP_NAME を作成しました${NC}"
-echo ""
-
-# 一時ディレクトリをクリーンアップ
-rm -rf "$TEMP_DIR"
-
-# ZIP ファイルのサイズを表示
-ZIP_SIZE=$(du -h "$PROJECT_ROOT/$ZIP_NAME" | cut -f1)
-echo -e "${GREEN}📦 パッケージサイズ: $ZIP_SIZE${NC}"
+# パッケージサイズを表示
+PACKAGE_SIZE=$(du -sh "$PACKAGE_DIR" | cut -f1)
+echo -e "${GREEN}📦 パッケージサイズ: $PACKAGE_SIZE${NC}"
 echo ""
 
 # Google Drive にアップロード（rclone）
+UPLOAD_SUCCESS=false
+GDRIVE_PATH=""
 if [ "$UPLOAD_TO_GDRIVE" = true ]; then
     echo -e "${BLUE}☁️  Google Drive にアップロード中...${NC}"
 
@@ -312,17 +291,20 @@ if [ "$UPLOAD_TO_GDRIVE" = true ]; then
                 echo -e "${YELLOW}⚠️  Google Drive リモートが見つからないため、最初のリモート ($GDRIVE_REMOTE) を使用します${NC}"
             fi
 
-            # アップロード先パス
-            GDRIVE_PATH="${GDRIVE_REMOTE}:tmp"
+            # アップロード先パス: tmp/<プロジェクト名>/<パッケージ名>/
+            # Windows からは H:\マイドライブ\tmp\<プロジェクト名>\<パッケージ名>\
+            GDRIVE_PATH="${GDRIVE_REMOTE}:tmp/${PROJECT_NAME}/${PACKAGE_NAME}"
 
             echo -e "${BLUE}   アップロード先: $GDRIVE_PATH${NC}"
+            # Windows 表記のパスは echo -e だと \t \r がエスケープ解釈されるため printf で出力する
+            printf "   （Windows: %s）\n" "$WINDOWS_PATH"
 
-            # アップロード実行
-            if rclone copy "$PROJECT_ROOT/$ZIP_NAME" "$GDRIVE_PATH" --progress; then
+            # アップロード実行（フォルダ単位で copy、圧縮なし）
+            if rclone copy "$PACKAGE_DIR" "$GDRIVE_PATH" --progress; then
                 echo -e "${GREEN}✓ Google Drive にアップロードしました${NC}"
+                UPLOAD_SUCCESS=true
             else
                 echo -e "${RED}❌ エラー: Google Drive へのアップロードに失敗しました${NC}"
-                exit 1
             fi
         fi
     fi
@@ -330,14 +312,34 @@ else
     echo -e "${YELLOW}ℹ️  Google Drive へのアップロードをスキップしました（--no-upload オプションが指定されています）${NC}"
 fi
 
+# パッケージのクリーンアップ / ローカル保管
+# ※ パッケージには without_mask（個人情報）の PDF が含まれるため、
+#    アップロードに成功した場合はローカルに残さない
+LOCAL_PACKAGE_PATH=""
+if [ "$UPLOAD_TO_GDRIVE" = true ] && [ "$UPLOAD_SUCCESS" = true ]; then
+    # アップロード成功時は temp を削除
+    rm -rf "$TEMP_DIR"
+else
+    # --no-upload またはアップロード失敗時はプロジェクトルートにフォルダを残す
+    mv "$PACKAGE_DIR" "$PROJECT_ROOT/"
+    rm -rf "$TEMP_DIR"
+    LOCAL_PACKAGE_PATH="$PROJECT_ROOT/$PACKAGE_NAME"
+fi
+
 echo ""
 echo -e "${GREEN}=====================================${NC}"
 echo -e "${GREEN}✅ パッケージング完了${NC}"
 echo -e "${GREEN}=====================================${NC}"
 echo ""
-echo -e "${BLUE}📦 作成されたファイル:${NC}"
-echo -e "   $PROJECT_ROOT/$ZIP_NAME"
-echo ""
-echo -e "${BLUE}📁 古いファイル:${NC}"
-echo -e "   $ARCHIVES_DIR/"
-echo ""
+if [ "$UPLOAD_SUCCESS" = true ]; then
+    echo -e "${BLUE}☁️  アップロード先:${NC}"
+    echo -e "   $GDRIVE_PATH/"
+    printf "   %s\n" "$WINDOWS_PATH"
+    echo ""
+fi
+if [ -n "$LOCAL_PACKAGE_PATH" ]; then
+    echo -e "${BLUE}📁 ローカルパッケージ:${NC}"
+    echo -e "   $LOCAL_PACKAGE_PATH/"
+    echo -e "${YELLOW}   ※ without_mask の PDF（個人情報）を含みます。取り扱いに注意してください${NC}"
+    echo ""
+fi
